@@ -19,12 +19,14 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Exécution du script
-        run: python scraper.py
+      - name: Exécution des scripts
+        run: |
+          python scraper.py
+          python scraper_states.py
 
       - name: Commit et push
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add data.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update data" && git push)
+          git add data.json states_data.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update national and states data" && git push)
