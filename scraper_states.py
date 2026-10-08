@@ -3,7 +3,8 @@ import json
 import urllib.request
 from datetime import datetime, timezone
 
-SENATE_CSV_URL = "https://projects.fivethirtyeight.com/senate-data/538_senate_averages.csv"
+# Flux officiel FiveThirtyEight des sondages du Sénat
+SENATE_POLLS_URL = "https://projects.fivethirtyeight.com/polls-page/data/senate_polls.csv"
 
 TARGET_STATES = {
     "PA": {"name": "Pennsylvanie", "alt": ["pa", "pennsylvania"]},
@@ -21,7 +22,7 @@ def fetch_state_polling():
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
     
-    req = urllib.request.Request(SENATE_CSV_URL, headers=headers)
+    req = urllib.request.Request(SENATE_POLLS_URL, headers=headers)
     states_result = {}
 
     try:
@@ -32,43 +33,35 @@ def fetch_state_polling():
 
         for code, config in TARGET_STATES.items():
             alts = config["alt"]
+            # Filtrer les sondages de l'État
             state_rows = [
                 r for r in rows 
-                if (r.get('state') or r.get('state_name') or '').strip().lower() in alts
+                if (r.get('state') or '').strip().lower() in alts
             ]
             
-            if not state_rows:
-                print(f"Pas de données brutes trouvées pour {config['name']} ({code})")
-                continue
+            dem_scores = []
+            rep_scores = []
 
-            by_date = {}
             for r in state_rows:
-                date_str = r.get('date') or r.get('modeldate') or r.get('created_at')
-                party = (r.get('party') or r.get('candidate') or r.get('candidate_party') or '').lower()
-                pct_raw = r.get('pct_estimate') or r.get('pct_trend_adjusted') or r.get('pct')
+                party = (r.get('party') or r.get('candidate_party') or '').lower()
+                pct_raw = r.get('pct') or r.get('pct_estimate')
                 
-                if not date_str or not pct_raw:
+                if not pct_raw:
                     continue
                 try:
-                    pct = round(float(pct_raw), 1)
+                    pct = float(pct_raw)
                 except ValueError:
                     continue
 
-                if date_str not in by_date:
-                    by_date[date_str] = {}
+                # Conserve les 5 sondages récents de chaque camp pour calculer la moyenne
+                if 'dem' in party and len(dem_scores) < 5:
+                    dem_scores.append(pct)
+                elif 'rep' in party and len(rep_scores) < 5:
+                    rep_scores.append(pct)
 
-                if 'dem' in party:
-                    by_date[date_str]['dem'] = pct
-                elif 'rep' in party:
-                    by_date[date_str]['rep'] = pct
-
-            valid_dates = [d for d in by_date if 'dem' in by_date[d] and 'rep' in by_date[d]]
-            valid_dates.sort()
-
-            if valid_dates:
-                latest_d = valid_dates[-1]
-                dem_val = by_date[latest_d]['dem']
-                rep_val = by_date[latest_d]['rep']
+            if dem_scores and rep_scores:
+                dem_val = round(sum(dem_scores) / len(dem_scores), 1)
+                rep_val = round(sum(rep_scores) / len(rep_scores), 1)
                 margin = round(dem_val - rep_val, 1)
 
                 states_result[code] = {
@@ -78,22 +71,12 @@ def fetch_state_polling():
                     "margin": margin,
                     "leading": "DEM" if margin > 0 else "REP"
                 }
-                print(f"OK {config['name']} : DEM {dem_val}% / REP {rep_val}%")
+                print(f"Extraction OK {config['name']} : DEM {dem_val}% / REP {rep_val}%")
+            else:
+                print(f"Aucun sondage récent trouvé pour {config['name']}")
 
     except Exception as e:
-        print(f"Erreur de lecture du CSV : {e}")
-
-    # Indique explicitement dans la console si un État utilise le secours
-    for code, config in TARGET_STATES.items():
-        if code not in states_result:
-            print(f"Avertissement : fallback appliqué pour {config['name']}")
-            states_result[code] = {
-                "name": config["name"],
-                "dem": 48.0,
-                "rep": 47.5,
-                "margin": 0.5,
-                "leading": "DEM"
-            }
+        print(f"Erreur téléchargement : {e}")
 
     output = {
         "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
@@ -103,7 +86,7 @@ def fetch_state_polling():
     with open("states_data.json", "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print("Mise à jour terminée dans states_data.json")
+    print(f"Mise à jour terminée : {len(states_result)} États enregistrés.")
 
 if __name__ == "__main__":
     fetch_state_polling()
