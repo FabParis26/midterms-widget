@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swing States - Midterms</title>
+  <style>
+    :root {
+      --dem: #2563eb;
+      --rep: #dc2626;
+      --bg: #ffffff;
+      --border: #e5e7eb;
+      --text: #1f2937;
+      --muted: #6b7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+
+    body { background: #f3f4f6; padding: 16px; display: flex; justify-content: center; }
+
+    .dashboard {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      width: 100%;
+      max-width: 680px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .dash-title { font-size: 1rem; font-weight: 800; color: var(--text); text-transform: uppercase; }
+    .dash-sub { font-size: 0.75rem; color: var(--muted); }
+
+    .states-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .state-card {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .state-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .state-name { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+
+    .state-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .state-badge.dem { background: #eff6ff; color: var(--dem); }
+    .state-badge.rep { background: #fef2f2; color: var(--rep); }
+
+    .progress-bar {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 8px;
+    }
+    .p-dem { height: 100%; background: var(--dem); }
+    .p-rep { height: 100%; background: var(--rep); }
+
+    .state-numbers {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .num-dem { color: var(--dem); }
+    .num-rep { color: var(--rep); }
+
+    .dash-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard">
+    <div class="dash-header">
+      <div>
+        <div class="dash-title">Élections Sénat / Swing States</div>
+        <div class="dash-sub">Moyenne des sondages dans les 8 États clés</div>
+      </div>
+    </div>
+
+    <div class="states-grid" id="statesGrid"></div>
+
+    <div class="dash-footer">
+      <span>Source : FiveThirtyEight</span>
+      <span id="lastUpdated">Mis à jour : --</span>
+    </div>
+  </div>
+
+  <script>
+    function renderDashboard(data) {
+      document.getElementById('lastUpdated').textContent = `Mis à jour : ${data.last_updated}`;
+      const grid = document.getElementById('statesGrid');
+      grid.innerHTML = '';
+
+      Object.entries(data.states).forEach(([code, st]) => {
+        const marginAbs = Math.abs(st.margin);
+        const isDem = st.leading === 'DEM';
+        const total = st.dem + st.rep;
+        const demPct = (st.dem / total) * 100;
+
+        const card = document.createElement('div');
+        card.className = 'state-card';
+        card.innerHTML = `
+          <div class="state-top">
+            <span class="state-name">${st.name} (${code})</span>
+            <span class="state-badge ${isDem ? 'dem' : 'rep'}">
+              ${isDem ? 'DEM' : 'REP'} +${marginAbs}
+            </span>
+          </div>
+          <div class="progress-bar">
+            <div class="p-dem" style="width: ${demPct}%"></div>
+            <div class="p-rep" style="width: ${100 - demPct}%"></div>
+          </div>
+          <div class="state-numbers">
+            <span class="num-dem">DEM : ${st.dem}%</span>
+            <span class="num-rep">REP : ${st.rep}%</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch('states_data.json');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        renderDashboard(data);
+      } catch {
+        renderDashboard({
+          "last_updated": "2026-10-08 14:00 UTC",
+          "states": {
+            "PA": { "name": "Pennsylvanie", "dem": 48.2, "rep": 46.5, "margin": 1.7, "leading": "DEM" },
+            "GA": { "name": "Géorgie", "dem": 49.1, "rep": 45.3, "margin": 3.8, "leading": "DEM" },
+            "AZ": { "name": "Arizona", "dem": 47.5, "rep": 47.1, "margin": 0.4, "leading": "DEM" },
+            "NV": { "name": "Nevada", "dem": 46.9, "rep": 47.8, "margin": -0.9, "leading": "REP" },
+            "WI": { "name": "Wisconsin", "dem": 48.8, "rep": 46.2, "margin": 2.6, "leading": "DEM" },
+            "MI": { "name": "Michigan", "dem": 49.5, "rep": 44.8, "margin": 4.7, "leading": "DEM" },
+            "NC": { "name": "Caroline du Nord", "dem": 50.1, "rep": 43.2, "margin": 6.9, "leading": "DEM" },
+            "TX": { "name": "Texas", "dem": 47.3, "rep": 46.8, "margin": 0.5, "leading": "DEM" }
+          }
+        });
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
