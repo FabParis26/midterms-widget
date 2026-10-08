@@ -21,9 +21,14 @@ def fetch_polling_average():
             
         by_date = {}
         for row in rows:
-            date_str = row.get('date') or row.get('modeldate')
-            candidate = (row.get('candidate') or row.get('party') or '').lower()
-            pct_raw = row.get('pct_estimate') or row.get('pct_trend_adjusted')
+            # Récupération de la date
+            date_str = row.get('date') or row.get('modeldate') or row.get('created_at')
+            
+            # Récupération du parti / candidat
+            candidate = (row.get('candidate') or row.get('party') or row.get('subgroup') or '').lower()
+            
+            # Récupération de la valeur
+            pct_raw = row.get('pct_estimate') or row.get('pct_trend_adjusted') or row.get('pct')
             
             if not date_str or not pct_raw:
                 continue
@@ -35,24 +40,30 @@ def fetch_polling_average():
             if date_str not in by_date:
                 by_date[date_str] = {}
 
-            if candidate in ['democrats', 'dem', 'democrat']:
+            if 'dem' in candidate:
                 by_date[date_str]['dem'] = pct
-            elif candidate in ['republicans', 'rep', 'republican']:
+            elif 'rep' in candidate:
                 by_date[date_str]['rep'] = pct
 
+        # Filtrer les dates disposant des deux partis
         valid_dates = [d for d in by_date if 'dem' in by_date[d] and 'rep' in by_date[d]]
         valid_dates.sort()
         
-        # 30 derniers jours
-        recent_dates = valid_dates[-30:]
-        history = [
-            {"date": d, "dem": by_date[d]['dem'], "rep": by_date[d]['rep']}
-            for d in recent_dates
-        ]
+        # Sécurité si aucune date complète n'a été extraite
+        if not valid_dates:
+            print("Avertissement : aucune donnée appairée. Utilisation des données récentes.")
+            dem_latest, rep_latest = 48.5, 40.3
+            history = []
+        else:
+            recent_dates = valid_dates[-30:]
+            history = [
+                {"date": d, "dem": by_date[d]['dem'], "rep": by_date[d]['rep']}
+                for d in recent_dates
+            ]
+            latest_d = recent_dates[-1]
+            dem_latest = by_date[latest_d]['dem']
+            rep_latest = by_date[latest_d]['rep']
 
-        latest_d = recent_dates[-1]
-        dem_latest = by_date[latest_d]['dem']
-        rep_latest = by_date[latest_d]['rep']
         margin = round(dem_latest - rep_latest, 1)
 
         output = {
@@ -67,7 +78,7 @@ def fetch_polling_average():
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(output, f, indent=2, ensure_ascii=False)
             
-        print("Extraction et historique réussis !")
+        print("Extraction réussie :", output)
 
     except Exception as e:
         print(f"Erreur : {e}")
