@@ -109,9 +109,9 @@
       background: #fafafa;
       border: 1px solid #f3f4f6;
       border-radius: 8px;
-      padding: 10px;
+      padding: 8px 4px 4px 4px;
       margin-bottom: 16px;
-      height: 110px;
+      height: 150px;
     }
 
     .chart-box svg {
@@ -153,7 +153,7 @@
     </div>
 
     <div class="chart-box">
-      <svg id="pollSvg" viewBox="0 0 300 80" preserveAspectRatio="none"></svg>
+      <svg id="pollSvg" viewBox="0 0 320 120" preserveAspectRatio="none"></svg>
     </div>
 
     <div class="widget-footer">
@@ -165,32 +165,85 @@
   <script>
     function renderSvgChart(history) {
       const svg = document.getElementById('pollSvg');
+      
+      // Données de démonstration si l'historique est indisponible
       if (!history || history.length < 2) {
-        // Courbe fictive fluide si pas d'historique
         history = [
-          {dem: 47.0, rep: 41.5}, {dem: 47.2, rep: 41.2},
-          {dem: 47.8, rep: 41.0}, {dem: 48.1, rep: 40.8},
-          {dem: 48.5, rep: 40.3}
+          {date: "09/08", dem: 46.8, rep: 41.5},
+          {date: "09/15", dem: 47.2, rep: 41.1},
+          {date: "09/22", dem: 47.9, rep: 40.8},
+          {date: "09/29", dem: 48.2, rep: 40.5},
+          {date: "10/08", dem: 48.5, rep: 40.3}
         ];
       }
 
-      const w = 300, h = 80, p = 8;
+      const w = 320, h = 120;
+      const padL = 28, padR = 12, padT = 12, padB = 22;
+      const graphW = w - padL - padR;
+      const graphH = h - padT - padB;
+
       const demVals = history.map(item => item.dem);
       const repVals = history.map(item => item.rep);
       const allVals = [...demVals, ...repVals];
 
-      const min = Math.floor(Math.min(...allVals) - 1);
-      const max = Math.ceil(Math.max(...allVals) + 1);
+      let minVal = Math.floor(Math.min(...allVals) - 2);
+      let maxVal = Math.ceil(Math.max(...allVals) + 2);
+      if (maxVal - minVal < 4) { minVal -= 2; maxVal += 2; }
 
-      const getX = (i) => p + (i / (history.length - 1)) * (w - 2 * p);
-      const getY = (val) => h - p - ((val - min) / (max - min)) * (h - 2 * p);
+      const getX = (i) => padL + (i / (history.length - 1)) * graphW;
+      const getY = (val) => padT + graphH - ((val - minVal) / (maxVal - minVal)) * graphH;
 
       const demPts = history.map((item, i) => `${getX(i)},${getY(item.dem)}`).join(' ');
       const repPts = history.map((item, i) => `${getX(i)},${getY(item.rep)}`).join(' ');
 
+      // Lignes de grille Y + étiquettes
+      const midVal = Math.round((minVal + maxVal) / 2);
+      const ySteps = [minVal, midVal, maxVal];
+      let gridSvg = '';
+      ySteps.forEach(v => {
+        const yPos = getY(v);
+        gridSvg += `
+          <line x1="${padL}" y1="${yPos}" x2="${w - padR}" y2="${yPos}" stroke="#e5e7eb" stroke-dasharray="2 2" />
+          <text x="${padL - 4}" y="${yPos + 3}" font-size="8" fill="#9ca3af" text-anchor="end">${v}%</text>
+        `;
+      });
+
+      // Repères de dates X (Début, Milieu, Fin)
+      let datesSvg = '';
+      const dateIndices = [0, Math.floor((history.length - 1) / 2), history.length - 1];
+      dateIndices.forEach(idx => {
+        const item = history[idx];
+        if (!item) return;
+        const xPos = getX(idx);
+        let rawDate = item.date || '';
+        let formattedDate = rawDate.length >= 10 ? rawDate.substring(5, 10).replace('-', '/') : rawDate;
+        
+        let anchor = "middle";
+        if (idx === 0) anchor = "start";
+        if (idx === history.length - 1) anchor = "end";
+
+        datesSvg += `
+          <text x="${xPos}" y="${h - 4}" font-size="8" fill="#9ca3af" text-anchor="${anchor}">${formattedDate}</text>
+        `;
+      });
+
+      // Points finaux sur les courbes
+      const lastIdx = history.length - 1;
+      const lastDemX = getX(lastIdx), lastDemY = getY(history[lastIdx].dem);
+      const lastRepX = getX(lastIdx), lastRepY = getY(history[lastIdx].rep);
+
+      const endPointsSvg = `
+        <circle cx="${lastDemX}" cy="${lastDemY}" r="3" fill="#2563eb" />
+        <circle cx="${lastRepX}" cy="${lastRepY}" r="3" fill="#dc2626" />
+      `;
+
+      svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
       svg.innerHTML = `
-        <polyline fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" points="${demPts}" />
-        <polyline fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" points="${repPts}" />
+        ${gridSvg}
+        ${datesSvg}
+        <polyline fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${demPts}" />
+        <polyline fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${repPts}" />
+        ${endPointsSvg}
       `;
     }
 
