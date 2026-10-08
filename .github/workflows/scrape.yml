@@ -1,0 +1,30 @@
+name: Actualisation des sondages
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v4
+
+      - name: Configuration de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Exécution du script
+        run: python scraper.py
+
+      - name: Commit et push
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update data" && git push)
