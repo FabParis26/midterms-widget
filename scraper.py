@@ -3,7 +3,6 @@ import json
 import urllib.request
 from datetime import datetime
 
-# Flux CSV officiel de FiveThirtyEight
 CSV_URL = "https://projects.fivethirtyeight.com/generic-ballot-data/538_generic_ballot_averages.csv"
 
 def fetch_polling_average():
@@ -20,48 +19,58 @@ def fetch_polling_average():
             reader = csv.DictReader(lines)
             rows = list(reader)
             
-        dem_est = None
-        rep_est = None
-        
-        # Parcourt les lignes du CSV pour récupérer la moyenne la plus récente de chaque parti
+        by_date = {}
         for row in rows:
-            candidate = row.get('candidate') or row.get('party') or ''
-            pct_raw = row.get('pct_estimate') or row.get('pct_trend_adjusted') or '0'
+            date_str = row.get('date') or row.get('modeldate')
+            candidate = (row.get('candidate') or row.get('party') or '').lower()
+            pct_raw = row.get('pct_estimate') or row.get('pct_trend_adjusted')
             
+            if not date_str or not pct_raw:
+                continue
             try:
-                pct = float(pct_raw)
+                pct = round(float(pct_raw), 1)
             except ValueError:
                 continue
-                
-            if candidate.lower() in ['democrats', 'dem', 'democrat'] and dem_est is None:
-                dem_est = round(pct, 1)
-            elif candidate.lower() in ['republicans', 'rep', 'republican'] and rep_est is None:
-                rep_est = round(pct, 1)
-                
-            if dem_est is not None and rep_est is None == False and rep_est is not None:
-                break
 
-        # Valeurs de secours si le format varie
-        if dem_est is None or rep_est is None:
-            dem_est, rep_est = 48.5, 40.3
+            if date_str not in by_date:
+                by_date[date_str] = {}
 
-        margin = round(dem_est - rep_est, 1)
+            if candidate in ['democrats', 'dem', 'democrat']:
+                by_date[date_str]['dem'] = pct
+            elif candidate in ['republicans', 'rep', 'republican']:
+                by_date[date_str]['rep'] = pct
+
+        valid_dates = [d for d in by_date if 'dem' in by_date[d] and 'rep' in by_date[d]]
+        valid_dates.sort()
         
+        # 30 derniers jours
+        recent_dates = valid_dates[-30:]
+        history = [
+            {"date": d, "dem": by_date[d]['dem'], "rep": by_date[d]['rep']}
+            for d in recent_dates
+        ]
+
+        latest_d = recent_dates[-1]
+        dem_latest = by_date[latest_d]['dem']
+        rep_latest = by_date[latest_d]['rep']
+        margin = round(dem_latest - rep_latest, 1)
+
         output = {
             "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
-            "democrats": dem_est,
-            "republicans": rep_est,
+            "democrats": dem_latest,
+            "republicans": rep_latest,
             "margin": margin,
-            "leading_party": "Démocrates" if margin > 0 else "Républicains"
+            "leading_party": "Démocrates" if margin > 0 else "Républicains",
+            "history": history
         }
         
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(output, f, indent=2, ensure_ascii=False)
             
-        print("Extraction réussie :", output)
+        print("Extraction et historique réussis !")
 
     except Exception as e:
-        print(f"Erreur lors du scraping : {e}")
+        print(f"Erreur : {e}")
         raise e
 
 if __name__ == "__main__":
