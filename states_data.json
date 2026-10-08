@@ -1,4 +1,61 @@
 {
-  "last_updated": "2026-10-08 14:55 UTC",
-  "states": {}
+  "last_updated": "2026-10-08 15:02 UTC",
+  "states": {
+    "PA": {
+      "name": "Pennsylvanie",
+      "dem": 48.2,
+      "rep": 46.5,
+      "margin": 1.7,
+      "leading": "DEM"
+    },
+    "GA": {
+      "name": "Géorgie",
+      "dem": 49.1,
+      "rep": 45.3,
+      "margin": 3.8,
+      "leading": "DEM"
+    },
+    "AZ": {
+      "name": "Arizona",
+      "dem": 47.5,
+      "rep": 47.1,
+      "margin": 0.4,
+      "leading": "DEM"
+    },
+    "NV": {
+      "name": "Nevada",
+      "dem": 46.9,
+      "rep": 47.8,
+      "margin": -0.9,
+      "leading": "REP"
+    },
+    "WI": {
+      "name": "Wisconsin",
+      "dem": 48.8,
+      "rep": 46.2,
+      "margin": 2.6,
+      "leading": "DEM"
+    },
+    "MI": {
+      "name": "Michigan",
+      "dem": 49.5,
+      "rep": 44.8,
+      "margin": 4.7,
+      "leading": "DEM"
+    },
+    "NC": {
+      "name": "Caroline du Nord",
+      "dem": 50.1,
+      "rep": 43.2,
+      "margin": 6.9,
+      "leading": "DEM"
+    },
+    "TX": {
+      "name": "Texas",
+      "dem": 47.3,
+      "rep": 46.8,
+      "margin": 0.5,
+      "leading": "DEM"
+    }
+  }
 }
