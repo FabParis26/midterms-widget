@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Widget Sondages Midterms</title>
+  <style>
+    :root {
+      --dem-color: #2563eb;
+      --rep-color: #dc2626;
+      --bg-color: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .widget-card {
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .widget-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .badge-lead {
+      background-color: #eff6ff;
+      color: var(--dem-color);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .badge-lead.rep {
+      background-color: #fef2f2;
+      color: var(--rep-color);
+    }
+
+    .main-metric { margin-bottom: 16px; }
+
+    .margin-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .margin-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .bar-container {
+      height: 12px;
+      background-color: #e5e7eb;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 12px;
+    }
+
+    .bar-dem { height: 100%; background-color: var(--dem-color); width: 50%; transition: width 0.6s ease; }
+    .bar-rep { height: 100%; background-color: var(--rep-color); width: 50%; transition: width 0.6s ease; }
+
+    .legend-container {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .party-dem { color: var(--dem-color); }
+    .party-rep { color: var(--rep-color); }
+
+    .widget-footer {
+      border-top: 1px solid var(--border-color);
+      padding-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget-card">
+    <div class="widget-header">
+      <span class="widget-title">Chambre des représentants</span>
+      <span id="lead-badge" class="badge-lead">Chargement...</span>
+    </div>
+
+    <div class="main-metric">
+      <div id="margin-value" class="margin-value">--</div>
+      <div class="margin-label">Écart moyen dans les sondages nationaux</div>
+    </div>
+
+    <div class="bar-container">
+      <div id="bar-dem" class="bar-dem"></div>
+      <div id="bar-rep" class="bar-rep"></div>
+    </div>
+
+    <div class="legend-container">
+      <div class="party-dem">Démocrates : <span id="pct-dem">--</span>%</div>
+      <div class="party-rep">Républicains : <span id="pct-rep">--</span>%</div>
+    </div>
+
+    <div class="widget-footer">
+      <span>Source : FiveThirtyEight</span>
+      <span id="last-updated">Mis à jour : --</span>
+    </div>
+  </div>
+
+  <script>
+    function updateWidget(data) {
+      const dem = data.democrats;
+      const rep = data.republicans;
+      const margin = Math.abs(data.margin);
+      const leadingParty = data.leading_party;
+
+      document.getElementById('pct-dem').textContent = dem;
+      document.getElementById('pct-rep').textContent = rep;
+      document.getElementById('margin-value').textContent = `+${margin} pts (${leadingParty})`;
+      document.getElementById('last-updated').textContent = `Mis à jour : ${data.last_updated}`;
+
+      const total = dem + rep;
+      const demPercent = (dem / total) * 100;
+      const repPercent = (rep / total) * 100;
+
+      document.getElementById('bar-dem').style.width = `${demPercent}%`;
+      document.getElementById('bar-rep').style.width = `${repPercent}%`;
+
+      const badge = document.getElementById('lead-badge');
+      badge.textContent = `${leadingParty} +${margin}`;
+      if (leadingParty === 'Républicains') {
+        badge.classList.add('rep');
+      } else {
+        badge.classList.remove('rep');
+      }
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch('data.json');
+        if (!res.ok) throw new Error('Fichier introuvable');
+        const data = await res.json();
+        updateWidget(data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
