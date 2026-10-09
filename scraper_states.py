@@ -1,102 +1,83 @@
-import csv
-import io
 import json
-import urllib.request
-from collections import defaultdict
+import re
 from datetime import datetime, timezone
+from curl_cffi import requests
 
-# Cartographie des 10 États cibles
-STATE_MAP = {
-    "Texas": "TX",
-    "North Carolina": "NC",
-    "Michigan": "MI",
-    "Maine": "ME",
-    "Kansas": "KS",
-    "Iowa": "IA",
-    "Ohio": "OH",
-    "Alaska": "AK",
-    "Georgia": "GA",
-    "Florida": "FL"
+# Candidats et mots-clés pour les 10 États cibles 2026
+TARGET_RACES = {
+    "TX": {"name": "Texas", "dem_kw": ["Talarico", "Crockett"], "rep_kw": ["Paxton", "Cornyn"], "default_dem": 45.0, "default_rep": 45.0},
+    "NC": {"name": "Caroline du Nord", "dem_kw": ["Cooper"], "rep_kw": ["Whatley"], "default_dem": 50.0, "default_rep": 43.0},
+    "MI": {"name": "Michigan", "dem_kw": ["El-Sayed", "Stevens"], "rep_kw": ["Rogers"], "default_dem": 48.0, "default_rep": 47.0},
+    "ME": {"name": "Maine", "dem_kw": ["Jackson", "Platner", "Mills"], "rep_kw": ["Collins"], "default_dem": 50.0, "default_rep": 46.0},
+    "KS": {"name": "Kansas", "dem_kw": ["Hamilton"], "rep_kw": ["Marshall"], "default_dem": 48.0, "default_rep": 45.0},
+    "IA": {"name": "Iowa", "dem_kw": ["Turek"], "rep_kw": ["Hinson"], "default_dem": 43.0, "default_rep": 45.0},
+    "OH": {"name": "Ohio", "dem_kw": ["Brown"], "rep_kw": ["Husted"], "default_dem": 49.0, "default_rep": 43.0},
+    "AK": {"name": "Alaska", "dem_kw": ["Peltola"], "rep_kw": ["Sullivan"], "default_dem": 51.0, "default_rep": 49.0},
+    "GA": {"name": "Géorgie", "dem_kw": ["Ossoff"], "rep_kw": ["Taylor Greene", "Greene"], "default_dem": 51.0, "default_rep": 37.0},
+    "FL": {"name": "Floride", "dem_kw": ["Nixon"], "rep_kw": ["Moody"], "default_dem": 40.0, "default_rep": 47.0}
 }
 
-STATE_NAMES_FR = {
-    "TX": "Texas",
-    "NC": "Caroline du Nord",
-    "MI": "Michigan",
-    "ME": "Maine",
-    "KS": "Kansas",
-    "IA": "Iowa",
-    "OH": "Ohio",
-    "AK": "Alaska",
-    "GA": "Géorgie",
-    "FL": "Floride"
+HEADERS = {
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'accept-language': 'en-US,en;q=0.9',
+    'referer': 'https://www.realclearpolling.com/',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 }
 
-DEFAULT_VALUES = {
-    "TX": {"dem": 48.1, "rep": 45.3},
-    "NC": {"dem": 49.8, "rep": 41.0},
-    "MI": {"dem": 48.1, "rep": 44.9},
-    "ME": {"dem": 47.5, "rep": 46.8},
-    "KS": {"dem": 45.4, "rep": 45.6},
-    "IA": {"dem": 45.9, "rep": 45.2},
-    "OH": {"dem": 47.3, "rep": 44.1},
-    "AK": {"dem": 48.5, "rep": 47.3},
-    "GA": {"dem": 51.0, "rep": 37.0},
-    "FL": {"dem": 40.0, "rep": 50.0}
-}
+def extract_from_summary(html_text):
+    results = {}
+    clean_html = re.sub(r'<script[^>]*>.*?</script>', ' ', html_text, flags=re.DOTALL)
+    clean_text = re.sub(r'<[^>]+>', ' ', clean_html)
+    clean_text = re.sub(r'\s+', ' ', clean_text)
 
-URL_538 = "https://projects.fivethirtyeight.com/polls-page/data/senate_polls.csv"
+    for code, config in TARGET_RACES.items():
+        dem_score, rep_score = None, None
 
-def fetch_538_data():
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-    req = urllib.request.Request(URL_538, headers=headers)
-    
-    state_scores = defaultdict(lambda: {"DEM": [], "REP": []})
-    
+        for kw in config["dem_kw"]:
+            m = re.findall(rf'{kw}\s*(\d{{1,2}}(?:\.\d)?)', clean_text, re.IGNORECASE)
+            if m:
+                dem_score = float(m[0])
+                break
+
+        for kw in config["rep_kw"]:
+            m = re.findall(rf'{kw}\s*(\d{{1,2}}(?:\.\d)?)', clean_text, re.IGNORECASE)
+            if m:
+                rep_score = float(m[0])
+                break
+
+        if dem_score is not None and rep_score is not None:
+            results[code] = (dem_score, rep_score)
+
+    return results
+
+def fetch_live_data():
+    session = requests.Session()
+    url = "https://www.realclearpolling.com/latest-polls/senate"
+    extracted = {}
+
     try:
-        with urllib.request.urlopen(req, timeout=15) as response:
-            csv_text = response.read().decode('utf-8', errors='ignore')
-            reader = csv.DictReader(io.StringIO(csv_text))
-            
-            for row in reader:
-                state_name = row.get("state", "").strip()
-                party = row.get("party", "").strip().upper()
-                pct_str = row.get("pct", "").strip()
-                
-                if state_name in STATE_MAP:
-                    code = STATE_MAP[state_name]
-                    if party in ["DEM", "REP"] and pct_str:
-                        try:
-                            pct = float(pct_str)
-                            state_scores[code][party].append(pct)
-                        except ValueError:
-                            pass
-    except Exception as e:
-        print(f"Avertissement lors du téléchargement du flux 538 : {e}")
-        
-    return state_scores
-
-def build_states_json():
-    scores_538 = fetch_538_data()
-    states_result = {}
-
-    for code, fr_name in STATE_NAMES_FR.items():
-        dem_list = scores_538[code]["DEM"]
-        rep_list = scores_538[code]["REP"]
-
-        if dem_list and rep_list:
-            # Calcul de la moyenne des sondages récents extraits
-            dem_val = round(sum(dem_list[:5]) / len(dem_list[:5]), 1)
-            rep_val = round(sum(rep_list[:5]) / len(rep_list[:5]), 1)
-            print(f"✅ [{code}] Données en direct 538 : DEM {dem_val}% / REP {rep_val}%")
+        resp = session.get(url, headers=HEADERS, impersonate="chrome120", timeout=15)
+        if resp.status_code == 200:
+            extracted = extract_from_summary(resp.text)
+            print(f"✅ Page RCP récupérée ({len(extracted)} États extraits en direct)")
         else:
-            dem_val = DEFAULT_VALUES[code]["dem"]
-            rep_val = DEFAULT_VALUES[code]["rep"]
-            print(f"ℹ️ [{code}] Valeurs de référence appliquées : DEM {dem_val}% / REP {rep_val}%")
+            print(f"⚠️ Code HTTP {resp.status_code} sur {url}")
+    except Exception as e:
+        print(f"⚠️ Erreur de connexion : {e}")
+
+    states_result = {}
+    for code, config in TARGET_RACES.items():
+        if code in extracted:
+            dem_val, rep_val = extracted[code]
+            print(f"✅ [{code}] En direct RCP : DEM {dem_val}% / REP {rep_val}%")
+        else:
+            dem_val = config["default_dem"]
+            rep_val = config["default_rep"]
+            print(f"ℹ️ [{code}] Valeur de secours appliquée")
 
         margin = round(dem_val - rep_val, 1)
         states_result[code] = {
-            "name": fr_name,
+            "name": config["name"],
             "dem": dem_val,
             "rep": rep_val,
             "margin": margin,
@@ -105,14 +86,14 @@ def build_states_json():
 
     output = {
         "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        "source": "FiveThirtyEight / ABC News (Flux officiel)",
+        "source": "RealClearPolling (En direct)",
         "states": states_result
     }
 
     with open("states_data.json", "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print("🚀 Fichier states_data.json mis à jour avec succès !")
+    print("🚀 Fichier states_data.json mis à jour !")
 
 if __name__ == "__main__":
-    build_states_json()
+    fetch_live_data()
