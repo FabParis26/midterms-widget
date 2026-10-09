@@ -1,61 +1,61 @@
 {
-  "last_updated": "2026-10-09 14:07 UTC",
-  "source": "FiveThirtyEight / ABC News (Flux officiel)",
+  "last_updated": "2026-10-09 14:24 UTC",
+  "source": "RealClearPolling (En direct)",
   "states": {
     "TX": {
       "name": "Texas",
-      "dem": 48.1,
-      "rep": 45.3,
-      "margin": 2.8,
-      "leading": "DEM"
+      "dem": 45.0,
+      "rep": 45.0,
+      "margin": 0.0,
+      "leading": "EQUAL"
     },
     "NC": {
       "name": "Caroline du Nord",
-      "dem": 49.8,
-      "rep": 41.0,
-      "margin": 8.8,
+      "dem": 50.0,
+      "rep": 43.0,
+      "margin": 7.0,
       "leading": "DEM"
     },
     "MI": {
       "name": "Michigan",
-      "dem": 48.1,
-      "rep": 44.9,
-      "margin": 3.2,
+      "dem": 48.0,
+      "rep": 47.0,
+      "margin": 1.0,
       "leading": "DEM"
     },
     "ME": {
       "name": "Maine",
-      "dem": 47.5,
-      "rep": 46.8,
-      "margin": 0.7,
+      "dem": 50.0,
+      "rep": 46.0,
+      "margin": 4.0,
       "leading": "DEM"
     },
     "KS": {
       "name": "Kansas",
-      "dem": 45.4,
-      "rep": 45.6,
-      "margin": -0.2,
-      "leading": "REP"
+      "dem": 48.0,
+      "rep": 45.0,
+      "margin": 3.0,
+      "leading": "DEM"
     },
     "IA": {
       "name": "Iowa",
-      "dem": 45.9,
-      "rep": 45.2,
-      "margin": 0.7,
-      "leading": "DEM"
+      "dem": 43.0,
+      "rep": 45.0,
+      "margin": -2.0,
+      "leading": "REP"
     },
     "OH": {
       "name": "Ohio",
-      "dem": 47.3,
-      "rep": 44.1,
-      "margin": 3.2,
+      "dem": 49.0,
+      "rep": 43.0,
+      "margin": 6.0,
       "leading": "DEM"
     },
     "AK": {
       "name": "Alaska",
-      "dem": 48.5,
-      "rep": 47.3,
-      "margin": 1.2,
+      "dem": 51.0,
+      "rep": 49.0,
+      "margin": 2.0,
       "leading": "DEM"
     },
     "GA": {
@@ -68,8 +68,8 @@
     "FL": {
       "name": "Floride",
       "dem": 40.0,
-      "rep": 50.0,
-      "margin": -10.0,
+      "rep": 47.0,
+      "margin": -7.0,
       "leading": "REP"
     }
   }
