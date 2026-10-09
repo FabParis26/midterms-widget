@@ -1,129 +1,150 @@
 import json
 import re
-import time
 from datetime import datetime, timezone
 from curl_cffi import requests
 
-# Configuration des 10 États clés et mots-clés associables
 TARGET_RACES = {
-    "TX": {"name": "Texas", "search": ["Texas", "Talarico", "Paxton"], "default_dem": 48.4, "default_rep": 45.3},
-    "IA": {"name": "Iowa", "search": ["Iowa", "Turek", "Hinson"], "default_dem": 46.2, "default_rep": 45.2},
-    "ME": {"name": "Maine", "search": ["Maine", "Jackson", "Collins"], "default_dem": 48.1, "default_rep": 47.4},
-    "OH": {"name": "Ohio", "search": ["Ohio", "Brown", "Husted"], "default_dem": 47.3, "default_rep": 44.1},
-    "AK": {"name": "Alaska", "search": ["Alaska", "Peltola", "Sullivan"], "default_dem": 48.5, "default_rep": 47.3},
-    "KS": {"name": "Kansas", "search": ["Kansas", "Hamilton", "Marshall"], "default_dem": 48.0, "default_rep": 45.0},
-    "MI": {"name": "Michigan", "search": ["Michigan", "El-Sayed", "Rogers"], "default_dem": 48.1, "default_rep": 44.9},
-    "NC": {"name": "Caroline du Nord", "search": ["North Carolina", "Cooper", "Whatley"], "default_dem": 50.0, "default_rep": 43.0},
-    "GA": {"name": "Géorgie", "search": ["Georgia", "Ossoff"], "default_dem": 51.0, "default_rep": 37.0},
-    "FL": {"name": "Floride", "search": ["Florida", "Nixon", "Moody"], "default_dem": 40.0, "default_rep": 50.0}
+    "TX": {
+        "name": "Texas",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/texas/talarico-vs-paxton",
+            "https://www.realclearpolling.com/polls/senate/general/2026/texas/paxton-vs-talarico"
+        ],
+        "default_dem": 48.4, "default_rep": 45.3
+    },
+    "IA": {
+        "name": "Iowa",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/iowa/turek-vs-hinson",
+            "https://www.realclearpolling.com/polls/senate/general/2026/iowa/hinson-vs-turek"
+        ],
+        "default_dem": 46.2, "default_rep": 45.2
+    },
+    "ME": {
+        "name": "Maine",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/maine/jackson-vs-collins",
+            "https://www.realclearpolling.com/polls/senate/general/2026/maine/collins-vs-jackson"
+        ],
+        "default_dem": 48.1, "default_rep": 47.4
+    },
+    "OH": {
+        "name": "Ohio",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/ohio/brown-vs-husted",
+            "https://www.realclearpolling.com/polls/senate/general/2026/ohio/husted-vs-brown"
+        ],
+        "default_dem": 47.3, "default_rep": 44.1
+    },
+    "AK": {
+        "name": "Alaska",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/alaska/peltola-vs-sullivan",
+            "https://www.realclearpolling.com/polls/senate/general/2026/alaska/sullivan-vs-peltola"
+        ],
+        "default_dem": 48.5, "default_rep": 47.3
+    },
+    "KS": {
+        "name": "Kansas",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/kansas/hamilton-vs-marshall",
+            "https://www.realclearpolling.com/polls/senate/general/2026/kansas/marshall-vs-hamilton"
+        ],
+        "default_dem": 48.0, "default_rep": 45.0
+    },
+    "MI": {
+        "name": "Michigan",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/michigan/el-sayed-vs-rogers",
+            "https://www.realclearpolling.com/polls/senate/general/2026/michigan/rogers-vs-el-sayed"
+        ],
+        "default_dem": 48.1, "default_rep": 44.9
+    },
+    "NC": {
+        "name": "Caroline du Nord",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/north-carolina/cooper-vs-whatley",
+            "https://www.realclearpolling.com/polls/senate/general/2026/north-carolina/whatley-vs-cooper"
+        ],
+        "default_dem": 50.0, "default_rep": 43.0
+    },
+    "GA": {
+        "name": "Géorgie",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/georgia/ossoff-vs-taylor-greene",
+            "https://www.realclearpolling.com/polls/senate/general/2026/georgia/senate"
+        ],
+        "default_dem": 51.0, "default_rep": 37.0
+    },
+    "FL": {
+        "name": "Floride",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/florida/nixon-vs-moody",
+            "https://www.realclearpolling.com/polls/senate/general/2026/florida/moody-vs-nixon"
+        ],
+        "default_dem": 40.0, "default_rep": 50.0
+    }
 }
 
 HEADERS = {
-    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-    'accept-language': 'en-US,en;q=0.9,fr;q=0.8',
-    'cache-control': 'max-age=0',
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'accept-language': 'en-US,en;q=0.9',
     'referer': 'https://www.realclearpolling.com/',
-    'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'document',
-    'sec-fetch-mode': 'navigate',
-    'sec-fetch-site': 'same-origin',
-    'sec-fetch-user': '?1',
-    'upgrade-insecure-requests': '1',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 }
 
-def extract_all_from_json_next(html):
-    """Analyse récursive des données JSON embarquées de Next.js"""
-    match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
-    if not match:
-        return {}
+def parse_rcp_html(html):
+    # 1. Extraction dans les scripts JS embarqués (données brutes)
+    scripts = re.findall(r'<script[^>]*>(.*?)</script>', html, re.DOTALL)
+    for s in scripts:
+        if 'party' in s and ('value' in s or 'score' in s):
+            dem_m = re.findall(r'"party"\s*:\s*"(?:DEM|D)"[^}]*?"(?:value|score|pct)"\s*:\s*"?(\d{1,2}\.\d|\d{1,2})"?', s, re.IGNORECASE)
+            rep_m = re.findall(r'"party"\s*:\s*"(?:REP|R|GOP)"[^}]*?"(?:value|score|pct)"\s*:\s*"?(\d{1,2}\.\d|\d{1,2})"?', s, re.IGNORECASE)
+            if dem_m and rep_m:
+                try:
+                    return float(dem_m[0]), float(rep_m[0])
+                except ValueError:
+                    pass
 
-    try:
-        data = json.loads(match.group(1))
-    except Exception:
-        return {}
+    # 2. Recherche directe de la ligne "RCP Average" dans le HTML
+    match_avg = re.search(r'RCP\s*Average.*?>\s*(\d{1,2}\.\d)\s*<.*?>\s*(\d{1,2}\.\d)', html, re.IGNORECASE | re.DOTALL)
+    if match_avg:
+        try:
+            return float(match_avg.group(1)), float(match_avg.group(2))
+        except ValueError:
+            pass
 
-    extracted = {}
+    # 3. Mode secours textuel : isolation du premier bloc de nombres après "RCP Average"
+    idx = html.find("RCP Average")
+    if idx != -1:
+        snippet = html[idx:idx+2000]
+        numbers = re.findall(r'\b(\d{2}\.\d)\b', snippet)
+        if len(numbers) >= 2:
+            try:
+                return float(numbers[0]), float(numbers[1])
+            except ValueError:
+                pass
 
-    def search_races(node):
-        if isinstance(node, dict):
-            title = str(node.get('title') or node.get('name') or node.get('race_name') or node.get('slug') or '')
-            rcp_avg = node.get('rcpAverage') or node.get('candidates') or node.get('pollResults')
-            
-            if title and isinstance(rcp_avg, list):
-                dem_score, rep_score = None, None
-                for cand in rcp_avg:
-                    if isinstance(cand, dict):
-                        party = str(cand.get('party') or cand.get('affiliation') or cand.get('name') or '').upper()
-                        val = cand.get('value') or cand.get('score') or cand.get('pct') or cand.get('average')
-                        if val is not None:
-                            try:
-                                num = float(val)
-                                if any(x in party for x in ['DEM', 'D', 'DEMOCRAT']):
-                                    dem_score = num
-                                elif any(x in party for x in ['REP', 'R', 'GOP', 'REPUBLICAN']):
-                                    rep_score = num
-                            except (ValueError, TypeError):
-                                pass
-                if dem_score is not None and rep_score is not None:
-                    extracted[title] = (dem_score, rep_score)
-
-            for v in node.values():
-                search_races(v)
-        elif isinstance(node, list):
-            for item in node:
-                search_races(item)
-
-    search_races(data)
-    return extracted
+    return None, None
 
 def fetch_live_data():
     session = requests.Session()
-    
-    # 1. Établissement des cookies de session via la page d'accueil
-    print("🔄 Initialisation de la session sur RealClearPolling...")
-    try:
-        session.get("https://www.realclearpolling.com/", headers=HEADERS, impersonate="chrome120", timeout=12)
-        time.sleep(1)
-    except Exception as e:
-        print(f"⚠️ Avertissement lors de la visite d'accueil : {e}")
-
-    extracted_data = {}
-    sources_to_try = [
-        "https://www.realclearpolling.com/maps/senate/2026/toss-up",
-        "https://www.realclearpolling.com/latest-polls/senate",
-        "https://www.realclearpolling.com/polls/senate"
-    ]
-
-    for source_url in sources_to_try:
-        try:
-            print(f"🌐 Tentative d'extraction sur : {source_url}")
-            resp = session.get(source_url, headers=HEADERS, impersonate="chrome120", timeout=12)
-            if resp.status_code == 200:
-                data_found = extract_all_from_json_next(resp.text)
-                if data_found:
-                    extracted_data.update(data_found)
-                    print(f"✅ Source validée (200 OK) — {len(data_found)} éléments extraits")
-                    break
-                else:
-                    print(f"⚠️ 200 OK mais aucun bloc JSON trouvé sur {source_url}")
-            else:
-                print(f"⚠️ Erreur HTTP {resp.status_code} sur {source_url}")
-        except Exception as e:
-            print(f"⚠️ Échec sur {source_url} : {e}")
-
     states_result = {}
 
     for code, config in TARGET_RACES.items():
         dem_val, rep_val = None, None
 
-        for race_title, scores in extracted_data.items():
-            if any(term.lower() in race_title.lower() for term in config["search"]):
-                dem_val, rep_val = scores
-                print(f"✅ [{code}] Données extraites en direct RCP : DEM {dem_val}% / REP {rep_val}%")
-                break
+        for url in config["urls"]:
+            try:
+                resp = session.get(url, headers=HEADERS, impersonate="chrome120", timeout=12)
+                if resp.status_code == 200:
+                    d, r = parse_rcp_html(resp.text)
+                    if d is not None and r is not None:
+                        dem_val, rep_val = d, r
+                        print(f"✅ [{code}] Extrait en direct RCP : DEM {dem_val}% / REP {rep_val}% ({url})")
+                        break
+            except Exception as e:
+                print(f"⚠️ [{code}] Erreur d'accès à {url} : {e}")
 
         if dem_val is None or rep_val is None:
             dem_val = config["default_dem"]
