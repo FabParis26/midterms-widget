@@ -1,10 +1,8 @@
 import json
 import re
 from datetime import datetime, timezone
-from bs4 import BeautifulSoup
 from curl_cffi import requests
 
-# Configuration des 10 États avec leurs URL directes sur RealClearPolling
 TARGET_RACES = {
     "TX": {
         "name": "Texas",
@@ -14,6 +12,38 @@ TARGET_RACES = {
         ],
         "default_dem": 48.1, "default_rep": 45.3
     },
+    "NC": {
+        "name": "Caroline du Nord",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/north-carolina/cooper-vs-whatley",
+            "https://www.realclearpolling.com/polls/senate/general/2026/north-carolina/whatley-vs-cooper"
+        ],
+        "default_dem": 49.8, "default_rep": 41.0
+    },
+    "MI": {
+        "name": "Michigan",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/michigan/rogers-vs-el-sayed",
+            "https://www.realclearpolling.com/polls/senate/general/2026/michigan/rogers-vs-stevens"
+        ],
+        "default_dem": 48.1, "default_rep": 44.9
+    },
+    "ME": {
+        "name": "Maine",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/maine/collins-vs-platner",
+            "https://www.realclearpolling.com/polls/senate/general/2026/maine/collins-vs-jackson"
+        ],
+        "default_dem": 47.5, "default_rep": 46.8
+    },
+    "KS": {
+        "name": "Kansas",
+        "urls": [
+            "https://www.realclearpolling.com/polls/senate/general/2026/kansas/marshall-vs-hamilton",
+            "https://www.realclearpolling.com/polls/senate/general/2026/kansas/hamilton-vs-marshall"
+        ],
+        "default_dem": 45.4, "default_rep": 45.6
+    },
     "IA": {
         "name": "Iowa",
         "urls": [
@@ -21,14 +51,6 @@ TARGET_RACES = {
             "https://www.realclearpolling.com/polls/senate/general/2026/iowa/hinson-vs-turek"
         ],
         "default_dem": 45.9, "default_rep": 45.2
-    },
-    "ME": {
-        "name": "Maine",
-        "urls": [
-            "https://www.realclearpolling.com/polls/senate/general/2026/maine/collins-vs-jackson",
-            "https://www.realclearpolling.com/polls/senate/general/2026/maine/collins-vs-platner"
-        ],
-        "default_dem": 48.3, "default_rep": 47.3
     },
     "OH": {
         "name": "Ohio",
@@ -46,35 +68,11 @@ TARGET_RACES = {
         ],
         "default_dem": 48.5, "default_rep": 47.3
     },
-    "KS": {
-        "name": "Kansas",
-        "urls": [
-            "https://www.realclearpolling.com/polls/senate/general/2026/kansas/hamilton-vs-marshall",
-            "https://www.realclearpolling.com/polls/senate/general/2026/kansas/marshall-vs-hamilton"
-        ],
-        "default_dem": 48.0, "default_rep": 45.0
-    },
-    "MI": {
-        "name": "Michigan",
-        "urls": [
-            "https://www.realclearpolling.com/polls/senate/general/2026/michigan/rogers-vs-el-sayed",
-            "https://www.realclearpolling.com/polls/senate/general/2026/michigan/el-sayed-vs-rogers"
-        ],
-        "default_dem": 48.1, "default_rep": 44.9
-    },
-    "NC": {
-        "name": "Caroline du Nord",
-        "urls": [
-            "https://www.realclearpolling.com/polls/senate/general/2026/north-carolina/cooper-vs-whatley",
-            "https://www.realclearpolling.com/polls/senate/general/2026/north-carolina/whatley-vs-cooper"
-        ],
-        "default_dem": 50.0, "default_rep": 43.0
-    },
     "GA": {
         "name": "Géorgie",
         "urls": [
             "https://www.realclearpolling.com/polls/senate/general/2026/georgia/ossoff-vs-taylor-greene",
-            "https://www.realclearpolling.com/polls/senate/general/2026/georgia/taylor-green-vs-ossoff"
+            "https://www.realclearpolling.com/polls/senate/general/2026/georgia/taylor-greene-vs-ossoff"
         ],
         "default_dem": 51.0, "default_rep": 37.0
     },
@@ -89,70 +87,41 @@ TARGET_RACES = {
 }
 
 HEADERS = {
-    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'accept-language': 'en-US,en;q=0.9',
     'referer': 'https://www.realclearpolling.com/',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
 }
 
-def parse_rcp_with_bs4(html):
-    soup = BeautifulSoup(html, 'html.parser')
+def extract_rcp_data(html_content):
+    # Suppression des balises HTML pour obtenir le texte brut
+    clean_text = re.sub(r'<[^>]+>', ' ', html_content)
+    clean_text = re.sub(r'\s+', ' ', clean_text)
 
-    # Recherche de toutes les tables du document HTML
-    for table in soup.find_all('table'):
-        rows = table.find_all('tr')
-        rcp_tr = None
-        header_tr = None
+    # 1. Détection de l'ordre des partis (Democrat vs Republican)
+    d_pos = re.search(r'\([D|Democrat]\)', clean_text, re.I)
+    r_pos = re.search(r'\([R|Republican|GOP]\)', clean_text, re.I)
 
-        for tr in rows:
-            text = tr.get_text()
-            if 'rcp average' in text.lower():
-                rcp_tr = tr
-            elif any(tag in text for tag in ['(D)', '(R)', 'Democrat', 'Republican', 'GOP']):
-                if not header_tr:
-                    header_tr = tr
+    dem_first = True
+    if d_pos and r_pos:
+        dem_first = (d_pos.start() < r_pos.start())
 
-        if rcp_tr:
-            # 1. Analyse de l'ordre Démocrate / Républicain dans l'en-tête
-            dem_first = True
-            if header_tr:
-                h_text = header_tr.get_text()
-                d_idx = h_text.find('(D)')
-                r_idx = h_text.find('(R)')
-                if d_idx != -1 and r_idx != -1:
-                    dem_first = (d_idx < r_idx)
-                else:
-                    d_pos = max(h_text.find('DEM'), h_text.find('Democrat'))
-                    r_pos = max(h_text.find('REP'), h_text.find('GOP'), h_text.find('Republican'))
-                    if d_pos != -1 and r_pos != -1:
-                        dem_first = (d_pos < r_pos)
+    # 2. Extraction du bloc "RCP Average"
+    idx = clean_text.lower().find("rcp average")
+    if idx != -1:
+        snippet = clean_text[idx:idx+300]
+        
+        # Nettoyage des plages de dates (ex: 9/15 - 10/6)
+        snippet = re.sub(r'\d{1,2}/\d{1,2}(?:\s*-\s*\d{1,2}/\d{1,2})?', ' ', snippet)
+        snippet = re.sub(r'[—\-\|,]', ' ', snippet)
 
-            # 2. Extraction des chiffres de la ligne "RCP Average"
-            cells = rcp_tr.find_all(['td', 'th'])
-            nums = []
-            for cell in cells:
-                c_text = cell.get_text().strip()
-                # On recherche les nombres décimaux (ex: 48.1 ou 45)
-                matches = re.findall(r'\b(\d{2}(?:\.\d)?)\b', c_text)
-                for val_str in matches:
-                    val = float(val_str)
-                    if 25.0 <= val <= 75.0:  # Fourchette valide de pourcentage de sondage
-                        nums.append(val)
+        # Isolement des pourcentages valides entre 20% et 80%
+        nums = [float(x) for x in re.findall(r'\b(\d{2}(?:\.\d)?)\b', snippet) if 20.0 <= float(x) <= 80.0]
 
-            if len(nums) >= 2:
-                dem_score = nums[0] if dem_first else nums[1]
-                rep_score = nums[1] if dem_first else nums[0]
-                return dem_score, rep_score
-
-    # Fallback par recherche regex sur ligne TR brute si BeautifulSoup ne trouve pas la table
-    tr_matches = re.findall(r'<tr[^>]*>(?:(?!</tr>).)*?RCP\s*Average(?:(?!</tr>).)*?</tr>', html, re.IGNORECASE | re.DOTALL)
-    for tr_html in tr_matches:
-        clean_text = re.sub(r'<[^>]+>', ' ', tr_html)
-        clean_text = re.sub(r'\d{1,2}/\d{1,2}(?:/\d{2,4})?', ' ', clean_text)
-        nums = re.findall(r'\b(\d{2}(?:\.\d)?)\b', clean_text)
-        valid = [float(n) for n in nums if 25.0 <= float(n) <= 75.0]
-        if len(valid) >= 2:
-            return valid[0], valid[1]
+        if len(nums) >= 2:
+            dem_score = nums[0] if dem_first else nums[1]
+            rep_score = nums[1] if dem_first else nums[0]
+            return dem_score, rep_score
 
     return None, None
 
@@ -167,13 +136,13 @@ def fetch_live_data():
             try:
                 resp = session.get(url, headers=HEADERS, impersonate="chrome120", timeout=12)
                 if resp.status_code == 200:
-                    d, r = parse_rcp_with_bs4(resp.text)
+                    d, r = extract_rcp_data(resp.text)
                     if d is not None and r is not None:
                         dem_val, rep_val = d, r
-                        print(f"✅ [{code}] Extraction réussie en direct depuis RCP : DEM {dem_val}% / REP {rep_val}% ({url})")
+                        print(f"✅ [{code}] Extrait en direct RCP : DEM {dem_val}% / REP {rep_val}% ({url})")
                         break
             except Exception as e:
-                print(f"⚠️ [{code}] Erreur de connexion à {url} : {e}")
+                print(f"⚠️ [{code}] Erreur d'accès à {url} : {e}")
 
         if dem_val is None or rep_val is None:
             dem_val = config["default_dem"]
