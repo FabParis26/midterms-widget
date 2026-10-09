@@ -1,7 +1,14 @@
 {
-  "last_updated": "2026-10-09 07:50 UTC",
+  "last_updated": "2026-10-09 08:03 UTC",
   "source": "RealClearPolling (En direct)",
   "states": {
+    "TX": {
+      "name": "Texas",
+      "dem": 48.1,
+      "rep": 45.3,
+      "margin": 2.8,
+      "leading": "DEM"
+    },
     "IA": {
       "name": "Iowa",
       "dem": 45.9,
@@ -9,19 +16,12 @@
       "margin": 0.7,
       "leading": "DEM"
     },
-    "TX": {
-      "name": "Texas",
-      "dem": 46.6,
-      "rep": 45.0,
-      "margin": 1.6,
-      "leading": "DEM"
-    },
     "ME": {
       "name": "Maine",
-      "dem": 46.0,
-      "rep": 46.0,
-      "margin": 0.0,
-      "leading": "EQUAL"
+      "dem": 48.1,
+      "rep": 47.4,
+      "margin": 0.7,
+      "leading": "DEM"
     },
     "OH": {
       "name": "Ohio",
@@ -46,9 +46,9 @@
     },
     "MI": {
       "name": "Michigan",
-      "dem": 48.0,
-      "rep": 47.0,
-      "margin": 1.0,
+      "dem": 48.1,
+      "rep": 44.9,
+      "margin": 3.2,
       "leading": "DEM"
     },
     "NC": {
@@ -67,9 +67,9 @@
     },
     "FL": {
       "name": "Floride",
-      "dem": 45.0,
-      "rep": 47.0,
-      "margin": -2.0,
+      "dem": 40.0,
+      "rep": 50.0,
+      "margin": -10.0,
       "leading": "REP"
     }
   }
