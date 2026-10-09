@@ -3,189 +3,100 @@ import re
 from datetime import datetime, timezone
 from curl_cffi import requests
 
-# Configuration des 10 États clés avec slugs et candidats réels RCP
+# Configuration des 10 États clés et mots-clés de recherche sur la carte RCP
 TARGET_RACES = {
-    "TX": {
-        "name": "Texas",
-        "state_path": "texas",
-        "slugs": ["talarico-vs-paxton", "paxton-vs-talarico", "cornyn-vs-crockett"],
-        "default_dem": 48.1, "default_rep": 45.3
-    },
-    "IA": {
-        "name": "Iowa",
-        "state_path": "iowa",
-        "slugs": ["turek-vs-hinson", "hinson-vs-turek"],
-        "default_dem": 45.9, "default_rep": 45.2
-    },
-    "ME": {
-        "name": "Maine",
-        "state_path": "maine",
-        "slugs": ["collins-vs-jackson", "jackson-vs-collins"],
-        "default_dem": 48.1, "default_rep": 47.4
-    },
-    "OH": {
-        "name": "Ohio",
-        "state_path": "ohio",
-        "slugs": ["husted-vs-brown", "brown-vs-husted"],
-        "default_dem": 49.0, "default_rep": 45.0
-    },
-    "AK": {
-        "name": "Alaska",
-        "state_path": "alaska",
-        "slugs": ["sullivan-vs-peltola", "peltola-vs-sullivan"],
-        "default_dem": 51.0, "default_rep": 49.0
-    },
-    "KS": {
-        "name": "Kansas",
-        "state_path": "kansas",
-        "slugs": ["marshall-vs-hamilton", "hamilton-vs-marshall"],
-        "default_dem": 48.0, "default_rep": 45.0
-    },
-    "MI": {
-        "name": "Michigan",
-        "state_path": "michigan",
-        "slugs": ["rogers-vs-el-sayed", "el-sayed-vs-rogers", "rogers-vs-elsayed"],
-        "default_dem": 48.1, "default_rep": 44.9
-    },
-    "NC": {
-        "name": "Caroline du Nord",
-        "state_path": "north-carolina",
-        "slugs": ["cooper-vs-whatley", "whatley-vs-cooper"],
-        "default_dem": 50.0, "default_rep": 43.0
-    },
-    "GA": {
-        "name": "Géorgie",
-        "state_path": "georgia",
-        "slugs": ["ossoff-vs-taylor-greene", "taylor-greene-vs-ossoff", "senate"],
-        "default_dem": 51.0, "default_rep": 37.0
-    },
-    "FL": {
-        "name": "Floride",
-        "state_path": "florida",
-        "slugs": ["moody-vs-nixon", "nixon-vs-moody"],
-        "default_dem": 40.0, "default_rep": 50.0
-    }
+    "TX": {"name": "Texas", "search": "Texas", "default_dem": 48.4, "default_rep": 45.3},
+    "IA": {"name": "Iowa", "search": "Iowa", "default_dem": 46.2, "default_rep": 45.2},
+    "ME": {"name": "Maine", "search": "Maine", "default_dem": 48.1, "default_rep": 47.4},
+    "OH": {"name": "Ohio", "search": "Ohio", "default_dem": 47.3, "default_rep": 44.1},
+    "AK": {"name": "Alaska", "search": "Alaska", "default_dem": 48.5, "default_rep": 47.3},
+    "KS": {"name": "Kansas", "search": "Kansas", "default_dem": 48.0, "default_rep": 45.0},
+    "MI": {"name": "Michigan", "search": "Michigan", "default_dem": 48.1, "default_rep": 44.9},
+    "NC": {"name": "Caroline du Nord", "search": "North Carolina", "default_dem": 50.0, "default_rep": 43.0},
+    "GA": {"name": "Géorgie", "search": "Georgia", "default_dem": 51.0, "default_rep": 37.0},
+    "FL": {"name": "Floride", "search": "Florida", "default_dem": 40.0, "default_rep": 50.0}
 }
 
-def parse_json_next_data(html):
-    """Extraction récursive dans l'objet __NEXT_DATA__ de Next.js"""
+def extract_all_from_map(html):
+    """Analyse le JSON Next.js embarqué sur la page carte de RealClearPolling"""
     match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
     if not match:
-        return None, None
+        return {}
 
     try:
         data = json.loads(match.group(1))
     except Exception:
-        return None, None
+        return {}
 
-    dem, rep = None, None
+    extracted = {}
 
-    def walk(obj):
-        nonlocal dem, rep
-        if isinstance(obj, dict):
-            for key in ['rcpAverage', 'candidates', 'pollResults', 'data', 'poll']:
-                if key in obj and isinstance(obj[key], list):
-                    d, r = parse_candidate_list(obj[key])
-                    if d is not None and r is not None:
-                        dem, rep = d, r
-                        return
-            for v in obj.values():
-                if dem is None or rep is None:
-                    walk(v)
-        elif isinstance(obj, list):
-            d, r = parse_candidate_list(obj)
-            if d is not None and r is not None:
-                dem, rep = d, r
-                return
-            for item in obj:
-                if dem is None or rep is None:
-                    walk(item)
+    def search_races(node):
+        if isinstance(node, dict):
+            # Détection d'un objet de course électorale RCP
+            title = str(node.get('title') or node.get('name') or node.get('race_name') or '')
+            rcp_avg = node.get('rcpAverage') or node.get('candidates') or node.get('pollResults')
+            
+            if title and isinstance(rcp_avg, list):
+                dem_score, rep_score = None, None
+                for cand in rcp_avg:
+                    if isinstance(cand, dict):
+                        party = str(cand.get('party') or cand.get('affiliation') or '').upper()
+                        val = cand.get('value') or cand.get('score') or cand.get('pct')
+                        if val is not None:
+                            try:
+                                num = float(val)
+                                if 'DEM' in party or party == 'D':
+                                    dem_score = num
+                                elif 'REP' in party or 'GOP' in party or party == 'R':
+                                    rep_score = num
+                            except (ValueError, TypeError):
+                                pass
+                if dem_score is not None and rep_score is not None:
+                    extracted[title] = (dem_score, rep_score)
 
-    def parse_candidate_list(lst):
-        d_val, r_val = None, None
-        for item in lst:
-            if isinstance(item, dict):
-                party = str(item.get('party') or item.get('affiliation') or item.get('name') or '').upper()
-                val = item.get('value') or item.get('score') or item.get('pct') or item.get('average')
-                if val is not None:
-                    try:
-                        num = float(val)
-                        if any(x in party for x in ['DEM', 'D', 'DEMOCRAT']):
-                            d_val = num
-                        elif any(x in party for x in ['REP', 'R', 'GOP', 'REPUBLICAN']):
-                            r_val = num
-                    except (ValueError, TypeError):
-                        pass
-        return d_val, r_val
+            for v in node.values():
+                search_races(v)
+        elif isinstance(node, list):
+            for item in node:
+                search_races(item)
 
-    walk(data)
-    return dem, rep
-
-def parse_html_regex(html):
-    """Extraction par regex dans le texte HTML"""
-    dem_m = re.findall(r'(?:DEM|DÉM|Democrat|\(D\))\s*[:\s]*(\d{1,2}\.\d|\d{1,2})\s*%?', html, re.IGNORECASE)
-    rep_m = re.findall(r'(?:REP|GOP|Republican|\(R\))\s*[:\s]*(\d{1,2}\.\d|\d{1,2})\s*%?', html, re.IGNORECASE)
-
-    if dem_m and rep_m:
-        try:
-            return float(dem_m[0]), float(rep_m[0])
-        except ValueError:
-            pass
-
-    matches = re.findall(r'RCP\s*Average.*?(\d{1,2}\.\d)\s*.*?(\d{1,2}\.\d)', html, re.IGNORECASE | re.DOTALL)
-    if matches:
-        try:
-            return float(matches[0][0]), float(matches[0][1])
-        except ValueError:
-            pass
-
-    return None, None
-
-def extract_scores(html):
-    dem, rep = parse_json_next_data(html)
-    if dem is not None and rep is not None:
-        return dem, rep
-    return parse_html_regex(html)
+    search_races(data)
+    return extracted
 
 def fetch_live_data():
     session = requests.Session()
     states_result = {}
+    extracted_data = {}
+
+    # URL unique regroupant l'intégralité des duels du Sénat
+    map_url = "https://www.realclearpolling.com/maps/senate/2026/toss-up"
+
+    try:
+        resp = session.get(map_url, impersonate="chrome120", timeout=15)
+        if resp.status_code == 200:
+            extracted_data = extract_all_from_map(resp.text)
+            print(f"✅ Carte RCP récupérée ({len(extracted_data)} courses trouvées)")
+        else:
+            print(f"⚠️ Erreur HTTP {resp.status_code} sur la carte RCP")
+    except Exception as e:
+        print(f"⚠️ Échec de connexion à la carte RCP : {e}")
 
     for code, config in TARGET_RACES.items():
         dem_val, rep_val = None, None
-        base_url = f"https://www.realclearpolling.com/polls/senate/general/2026/{config['state_path']}"
+        search_term = config["search"]
 
-        for slug in config["slugs"]:
-            url = f"{base_url}/{slug}"
-            try:
-                resp = session.get(url, impersonate="chrome120", timeout=12)
-                if resp.status_code == 200:
-                    d, r = extract_scores(resp.text)
-                    if d is not None and r is not None:
-                        dem_val, rep_val = d, r
-                        print(f"✅ [{code}] Extrait en direct depuis RCP : DEM {dem_val}% / REP {rep_val}% ({url})")
-                        break
-            except Exception:
-                continue
+        # Recherche de l'État dans les données extraites
+        for race_title, scores in extracted_data.items():
+            if search_term.lower() in race_title.lower():
+                dem_val, rep_val = scores
+                print(f"✅ [{code}] Données extraites en direct RCP : DEM {dem_val}% / REP {rep_val}%")
+                break
 
-        # Secours de niveau 2 : page récapitulative globale
-        if dem_val is None or rep_val is None:
-            try:
-                summary_url = "https://www.realclearpolling.com/latest-polls/senate"
-                resp = session.get(summary_url, impersonate="chrome120", timeout=12)
-                if resp.status_code == 200:
-                    d, r = extract_scores(resp.text)
-                    if d is not None and r is not None:
-                        dem_val, rep_val = d, r
-                        print(f"✅ [{code}] Extrait depuis la page récapitulative RCP : DEM {dem_val}% / REP {rep_val}%")
-            except Exception:
-                pass
-
-        # Secours de niveau 3 : valeurs par défaut si blocage total
+        # Fallback de sécurité si l'État n'est pas trouvé dans la réponse
         if dem_val is None or rep_val is None:
             dem_val = config["default_dem"]
             rep_val = config["default_rep"]
-            print(f"⚠️ [{code}] Valeur de référence appliquée : DEM {dem_val}% / REP {rep_val}%")
+            print(f"ℹ️ [{code}] Valeur de référence appliquée : DEM {dem_val}% / REP {rep_val}%")
 
         margin = round(dem_val - rep_val, 1)
         states_result[code] = {
