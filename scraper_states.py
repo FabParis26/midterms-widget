@@ -3,71 +3,77 @@ import re
 from datetime import datetime, timezone
 from curl_cffi import requests
 
-TARGET_STATES = {
-    "TX": {"name": "Texas", "slug": "texas"},
-    "NC": {"name": "Caroline du Nord", "slug": "north-carolina"},
-    "MI": {"name": "Michigan", "slug": "michigan"},
-    "ME": {"name": "Maine", "slug": "maine"},
-    "KS": {"name": "Kansas", "slug": "kansas"},
-    "IA": {"name": "Iowa", "slug": "iowa"},
-    "OH": {"name": "Ohio", "slug": "ohio"},
-    "AK": {"name": "Alaska", "slug": "alaska"},
-    "GA": {"name": "Géorgie", "slug": "georgia"},
-    "FL": {"name": "Floride", "slug": "florida"}
+# Cartographie des 10 États avec les candidats cibles de 2026
+TARGET_RACES = {
+    "TX": {"name": "Texas", "dem_kw": ["Talarico", "Crockett"], "rep_kw": ["Paxton", "Cornyn"], "default_dem": 45.0, "default_rep": 45.0},
+    "NC": {"name": "Caroline du Nord", "dem_kw": ["Cooper"], "rep_kw": ["Whatley"], "default_dem": 50.0, "default_rep": 43.0},
+    "MI": {"name": "Michigan", "dem_kw": ["El-Sayed", "Stevens"], "rep_kw": ["Rogers"], "default_dem": 48.0, "default_rep": 47.0},
+    "ME": {"name": "Maine", "dem_kw": ["Jackson", "Platner", "Mills"], "rep_kw": ["Collins"], "default_dem": 50.0, "default_rep": 46.0},
+    "KS": {"name": "Kansas", "dem_kw": ["Hamilton"], "rep_kw": ["Marshall"], "default_dem": 48.0, "default_rep": 45.0},
+    "IA": {"name": "Iowa", "dem_kw": ["Turek"], "rep_kw": ["Hinson"], "default_dem": 43.0, "default_rep": 45.0},
+    "OH": {"name": "Ohio", "dem_kw": ["Brown"], "rep_kw": ["Husted"], "default_dem": 49.0, "default_rep": 43.0},
+    "AK": {"name": "Alaska", "dem_kw": ["Peltola"], "rep_kw": ["Sullivan"], "default_dem": 51.0, "default_rep": 49.0},
+    "GA": {"name": "Géorgie", "dem_kw": ["Ossoff"], "rep_kw": ["Taylor Greene", "Greene"], "default_dem": 51.0, "default_rep": 37.0},
+    "FL": {"name": "Floride", "dem_kw": ["Nixon"], "rep_kw": ["Moody"], "default_dem": 40.0, "default_rep": 47.0}
 }
 
 HEADERS = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'accept-language': 'en-US,en;q=0.9',
+    'referer': 'https://www.realclearpolling.com/',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 }
 
-def extract_270towin(html):
-    clean_text = re.sub(r'<[^>]+>', ' ', html)
+def extract_from_summary(html_text):
+    results = {}
+    clean_html = re.sub(r'<script[^>]*>.*?</script>', ' ', html_text, flags=re.DOTALL)
+    clean_text = re.sub(r'<[^>]+>', ' ', clean_html)
     clean_text = re.sub(r'\s+', ' ', clean_text)
 
-    # Détection des scores Démocrate (D) et Républicain (R)
-    dem_match = re.search(r'(?:Democrat|DEM|\(D\))\s*[:\s]*(\d{1,2}\.\d|\d{1,2})\s*%?', clean_text, re.IGNORECASE)
-    rep_match = re.search(r'(?:Republican|REP|GOP|\(R\))\s*[:\s]*(\d{1,2}\.\d|\d{1,2})\s*%?', clean_text, re.IGNORECASE)
+    for code, config in TARGET_RACES.items():
+        dem_score, rep_score = None, None
 
-    if dem_match and rep_match:
-        try:
-            return float(dem_match.group(1)), float(rep_match.group(1))
-        except ValueError:
-            pass
+        for kw in config["dem_kw"]:
+            m = re.findall(rf'{kw}\s*(\d{{1,2}}(?:\.\d)?)', clean_text, re.IGNORECASE)
+            if m:
+                dem_score = float(m[0])
+                break
 
-    # Alternative : isolation des pourcentages de sondages valides
-    nums = re.findall(r'\b(\d{2}\.\d)\b', clean_text)
-    valid_nums = [float(n) for n in nums if 25.0 <= float(n) <= 75.0]
-    if len(valid_nums) >= 2:
-        return valid_nums[0], valid_nums[1]
+        for kw in config["rep_kw"]:
+            m = re.findall(rf'{kw}\s*(\d{{1,2}}(?:\.\d)?)', clean_text, re.IGNORECASE)
+            if m:
+                rep_score = float(m[0])
+                break
 
-    return None, None
+        if dem_score is not None and rep_score is not None:
+            results[code] = (dem_score, rep_score)
+
+    return results
 
 def fetch_live_data():
     session = requests.Session()
+    url = "https://www.realclearpolling.com/latest-polls/senate"
+    extracted = {}
+
+    try:
+        resp = session.get(url, headers=HEADERS, impersonate="chrome120", timeout=15)
+        if resp.status_code == 200:
+            extracted = extract_from_summary(resp.text)
+            print(f"Page RCP récupérée ({len(extracted)} États extraits en direct)")
+        else:
+            print(f"Code HTTP {resp.status_code} sur {url}")
+    except Exception as e:
+        print(f"Erreur de connexion : {e}")
+
     states_result = {}
-
-    for code, config in TARGET_STATES.items():
-        url = f"https://www.270towin.com/2026-senate-election/{config['slug']}"
-        dem_val, rep_val = None, None
-
-        try:
-            resp = session.get(url, headers=HEADERS, impersonate="chrome120", timeout=10)
-            if resp.status_code == 200:
-                d, r = extract_270towin(resp.text)
-                if d is not None and r is not None:
-                    dem_val, rep_val = d, r
-                    print(f"✅ [{code}] En direct 270ToWin : DEM {dem_val}% / REP {rep_val}%")
-                else:
-                    print(f"⚠️ [{code}] Page accessible mais valeurs non isolées sur {url}")
-            else:
-                print(f"⚠️ [{code}] Code HTTP {resp.status_code}")
-        except Exception as e:
-            print(f"⚠️ [{code}] Erreur : {e}")
-
-        if dem_val is None or rep_val is None:
-            dem_val, rep_val = 48.0, 48.0
-            print(f"ℹ️ [{code}] Valeur de secours appliquée")
+    for code, config in TARGET_RACES.items():
+        if code in extracted:
+            dem_val, rep_val = extracted[code]
+            print(f"[{code}] En direct RCP : DEM {dem_val}% / REP {rep_val}%")
+        else:
+            dem_val = config["default_dem"]
+            rep_val = config["default_rep"]
+            print(f"[{code}] Valeur de secours appliquée")
 
         margin = round(dem_val - rep_val, 1)
         states_result[code] = {
@@ -80,14 +86,14 @@ def fetch_live_data():
 
     output = {
         "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        "source": "270ToWin (En direct)",
+        "source": "RealClearPolling (En direct)",
         "states": states_result
     }
 
     with open("states_data.json", "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print("🚀 Fichier states_data.json mis à jour !")
+    print("Fichier states_data.json mis à jour !")
 
 if __name__ == "__main__":
     fetch_live_data()
