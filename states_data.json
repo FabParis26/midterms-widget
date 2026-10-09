@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-09 12:27 UTC",
+  "last_updated": "2026-10-09 12:47 UTC",
   "source": "RealClearPolling (En direct)",
   "states": {
     "TX": {
@@ -18,9 +18,9 @@
     },
     "ME": {
       "name": "Maine",
-      "dem": 48.1,
-      "rep": 47.4,
-      "margin": 0.7,
+      "dem": 48.3,
+      "rep": 47.3,
+      "margin": 1.0,
       "leading": "DEM"
     },
     "OH": {
