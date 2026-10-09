@@ -3,95 +3,136 @@ import re
 from datetime import datetime, timezone
 from curl_cffi import requests
 
-# Configuration des 10 courses avec gestion automatique de l'ordre des slugs
+# Configuration des 10 États clés avec slugs et candidats réels RCP
 TARGET_RACES = {
-    "IA": {
-        "name": "Iowa",
-        "slugs": ["turek-vs-hinson", "hinson-vs-turek"],
-        "state_path": "iowa",
-        "default_dem": 45.9, "default_rep": 45.2
-    },
     "TX": {
         "name": "Texas",
-        "slugs": ["paxton-vs-talarico-vs-brown", "talarico-vs-paxton", "talarico-vs-cornyn"],
         "state_path": "texas",
-        "default_dem": 46.6, "default_rep": 45.0
+        "slugs": ["talarico-vs-paxton", "paxton-vs-talarico", "cornyn-vs-crockett"],
+        "default_dem": 48.1, "default_rep": 45.3
+    },
+    "IA": {
+        "name": "Iowa",
+        "state_path": "iowa",
+        "slugs": ["turek-vs-hinson", "hinson-vs-turek"],
+        "default_dem": 45.9, "default_rep": 45.2
     },
     "ME": {
         "name": "Maine",
-        "slugs": ["jackson-vs-collins", "collins-vs-jackson", "mills-vs-collins"],
         "state_path": "maine",
-        "default_dem": 46.0, "default_rep": 46.0
+        "slugs": ["collins-vs-jackson", "jackson-vs-collins"],
+        "default_dem": 48.1, "default_rep": 47.4
     },
     "OH": {
         "name": "Ohio",
-        "slugs": ["brown-vs-husted", "husted-vs-brown"],
         "state_path": "ohio",
+        "slugs": ["husted-vs-brown", "brown-vs-husted"],
         "default_dem": 49.0, "default_rep": 45.0
     },
     "AK": {
         "name": "Alaska",
-        "slugs": ["peltola-vs-sullivan", "sullivan-vs-peltola"],
         "state_path": "alaska",
+        "slugs": ["sullivan-vs-peltola", "peltola-vs-sullivan"],
         "default_dem": 51.0, "default_rep": 49.0
     },
     "KS": {
         "name": "Kansas",
-        "slugs": ["hamilton-vs-marshall", "marshall-vs-hamilton"],
         "state_path": "kansas",
+        "slugs": ["marshall-vs-hamilton", "hamilton-vs-marshall"],
         "default_dem": 48.0, "default_rep": 45.0
     },
     "MI": {
         "name": "Michigan",
-        "slugs": ["elsayed-vs-rogers", "rogers-vs-elsayed"],
         "state_path": "michigan",
-        "default_dem": 48.0, "default_rep": 47.0
+        "slugs": ["rogers-vs-el-sayed", "el-sayed-vs-rogers", "rogers-vs-elsayed"],
+        "default_dem": 48.1, "default_rep": 44.9
     },
     "NC": {
         "name": "Caroline du Nord",
-        "slugs": ["cooper-vs-whatley", "whatley-vs-cooper"],
         "state_path": "north-carolina",
+        "slugs": ["cooper-vs-whatley", "whatley-vs-cooper"],
         "default_dem": 50.0, "default_rep": 43.0
     },
     "GA": {
         "name": "Géorgie",
-        "slugs": ["ossoff-vs-taylor-greene", "taylor-green-vs-ossoff", "senate"],
         "state_path": "georgia",
+        "slugs": ["ossoff-vs-taylor-greene", "taylor-greene-vs-ossoff", "senate"],
         "default_dem": 51.0, "default_rep": 37.0
     },
     "FL": {
         "name": "Floride",
-        "slugs": ["nixon-vs-moody", "moody-vs-nixon"],
         "state_path": "florida",
-        "default_dem": 45.0, "default_rep": 47.0
+        "slugs": ["moody-vs-nixon", "nixon-vs-moody"],
+        "default_dem": 40.0, "default_rep": 50.0
     }
 }
 
-def extract_from_html(html):
-    # 1. Lecture directe du tableau JSON Next.js embarqué par RCP
-    next_data_match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
-    if next_data_match:
+def parse_json_next_data(html):
+    """Extraction récursive dans l'objet __NEXT_DATA__ de Next.js"""
+    match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
+    if not match:
+        return None, None
+
+    try:
+        data = json.loads(match.group(1))
+    except Exception:
+        return None, None
+
+    dem, rep = None, None
+
+    def walk(obj):
+        nonlocal dem, rep
+        if isinstance(obj, dict):
+            for key in ['rcpAverage', 'candidates', 'pollResults', 'data', 'poll']:
+                if key in obj and isinstance(obj[key], list):
+                    d, r = parse_candidate_list(obj[key])
+                    if d is not None and r is not None:
+                        dem, rep = d, r
+                        return
+            for v in obj.values():
+                if dem is None or rep is None:
+                    walk(v)
+        elif isinstance(obj, list):
+            d, r = parse_candidate_list(obj)
+            if d is not None and r is not None:
+                dem, rep = d, r
+                return
+            for item in obj:
+                if dem is None or rep is None:
+                    walk(item)
+
+    def parse_candidate_list(lst):
+        d_val, r_val = None, None
+        for item in lst:
+            if isinstance(item, dict):
+                party = str(item.get('party') or item.get('affiliation') or item.get('name') or '').upper()
+                val = item.get('value') or item.get('score') or item.get('pct') or item.get('average')
+                if val is not None:
+                    try:
+                        num = float(val)
+                        if any(x in party for x in ['DEM', 'D', 'DEMOCRAT']):
+                            d_val = num
+                        elif any(x in party for x in ['REP', 'R', 'GOP', 'REPUBLICAN']):
+                            r_val = num
+                    except (ValueError, TypeError):
+                        pass
+        return d_val, r_val
+
+    walk(data)
+    return dem, rep
+
+def parse_html_regex(html):
+    """Extraction par regex dans le texte HTML"""
+    dem_m = re.findall(r'(?:DEM|DÉM|Democrat|\(D\))\s*[:\s]*(\d{1,2}\.\d|\d{1,2})\s*%?', html, re.IGNORECASE)
+    rep_m = re.findall(r'(?:REP|GOP|Republican|\(R\))\s*[:\s]*(\d{1,2}\.\d|\d{1,2})\s*%?', html, re.IGNORECASE)
+
+    if dem_m and rep_m:
         try:
-            data = json.loads(next_data_match.group(1))
-            props = data.get('props', {}).get('pageProps', {})
-            rcp_avg = props.get('rcpAverage') or props.get('data', {}).get('rcpAverage')
-            if rcp_avg and isinstance(rcp_avg, list) and len(rcp_avg) > 0:
-                scores = {}
-                for cand in rcp_avg:
-                    party = str(cand.get('party', '') or cand.get('affiliation', '')).upper()
-                    val = cand.get('value') or cand.get('score') or cand.get('pct')
-                    if val is not None:
-                        if 'DEM' in party or party == 'D':
-                            scores['dem'] = float(val)
-                        elif 'REP' in party or 'GOP' in party or party == 'R':
-                            scores['rep'] = float(val)
-                if 'dem' in scores and 'rep' in scores:
-                    return scores['dem'], scores['rep']
-        except Exception:
+            return float(dem_m[0]), float(rep_m[0])
+        except ValueError:
             pass
 
-    # 2. Recherche par expression régulière dans le HTML
-    matches = re.findall(r'RCP Average.*?(\d{1,2}\.\d|\d{1,2})\s*.*?(\d{1,2}\.\d|\d{1,2})', html, re.IGNORECASE | re.DOTALL)
+    matches = re.findall(r'RCP\s*Average.*?(\d{1,2}\.\d)\s*.*?(\d{1,2}\.\d)', html, re.IGNORECASE | re.DOTALL)
     if matches:
         try:
             return float(matches[0][0]), float(matches[0][1])
@@ -100,31 +141,51 @@ def extract_from_html(html):
 
     return None, None
 
+def extract_scores(html):
+    dem, rep = parse_json_next_data(html)
+    if dem is not None and rep is not None:
+        return dem, rep
+    return parse_html_regex(html)
+
 def fetch_live_data():
+    session = requests.Session()
     states_result = {}
 
     for code, config in TARGET_RACES.items():
         dem_val, rep_val = None, None
-        base_path = f"https://www.realclearpolling.com/polls/senate/general/2026/{config['state_path']}"
-        
-        # Test de chaque déclinaison d'URL jusqu'à trouver la bonne
+        base_url = f"https://www.realclearpolling.com/polls/senate/general/2026/{config['state_path']}"
+
         for slug in config["slugs"]:
-            url = f"{base_path}/{slug}"
+            url = f"{base_url}/{slug}"
             try:
-                resp = requests.get(url, impersonate="chrome120", timeout=10)
+                resp = session.get(url, impersonate="chrome120", timeout=12)
                 if resp.status_code == 200:
-                    dem_val, rep_val = extract_from_html(resp.text)
-                    if dem_val is not None and rep_val is not None:
-                        print(f"✅ [{code}] Données extraites en direct RCP : DEM {dem_val}% / REP {rep_val}% ({url})")
+                    d, r = extract_scores(resp.text)
+                    if d is not None and r is not None:
+                        dem_val, rep_val = d, r
+                        print(f"✅ [{code}] Extrait en direct depuis RCP : DEM {dem_val}% / REP {rep_val}% ({url})")
                         break
-            except Exception as e:
+            except Exception:
                 continue
 
-        # Si aucune URL n'a répondu, application des données de sécurité
+        # Secours de niveau 2 : page récapitulative globale
+        if dem_val is None or rep_val is None:
+            try:
+                summary_url = "https://www.realclearpolling.com/latest-polls/senate"
+                resp = session.get(summary_url, impersonate="chrome120", timeout=12)
+                if resp.status_code == 200:
+                    d, r = extract_scores(resp.text)
+                    if d is not None and r is not None:
+                        dem_val, rep_val = d, r
+                        print(f"✅ [{code}] Extrait depuis la page récapitulative RCP : DEM {dem_val}% / REP {rep_val}%")
+            except Exception:
+                pass
+
+        # Secours de niveau 3 : valeurs par défaut si blocage total
         if dem_val is None or rep_val is None:
             dem_val = config["default_dem"]
             rep_val = config["default_rep"]
-            print(f"ℹ️ [{code}] Valeur de référence appliquée : DEM {dem_val}% / REP {rep_val}%")
+            print(f"⚠️ [{code}] Valeur de référence appliquée : DEM {dem_val}% / REP {rep_val}%")
 
         margin = round(dem_val - rep_val, 1)
         states_result[code] = {
