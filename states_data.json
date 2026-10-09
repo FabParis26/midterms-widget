@@ -1,62 +1,62 @@
 {
-  "last_updated": "2026-10-09 07:06 UTC",
-  "source": "RealClearPolling",
+  "last_updated": "2026-10-09 07:28 UTC",
+  "source": "RealClearPolling (En direct)",
   "states": {
-    "IA": {
-      "name": "Iowa",
-      "dem": 48.5,
-      "rep": 48.5,
+    "TX": {
+      "name": "Texas",
+      "dem": 45.0,
+      "rep": 45.0,
       "margin": 0.0,
       "leading": "EQUAL"
     },
+    "IA": {
+      "name": "Iowa",
+      "dem": 47.0,
+      "rep": 48.0,
+      "margin": -1.0,
+      "leading": "REP"
+    },
     "ME": {
       "name": "Maine",
+      "dem": 46.0,
+      "rep": 46.0,
+      "margin": 0.0,
+      "leading": "EQUAL"
+    },
+    "OH": {
+      "name": "Ohio",
+      "dem": 49.0,
+      "rep": 45.0,
+      "margin": 4.0,
+      "leading": "DEM"
+    },
+    "AK": {
+      "name": "Alaska",
+      "dem": 51.0,
+      "rep": 49.0,
+      "margin": 2.0,
+      "leading": "DEM"
+    },
+    "KS": {
+      "name": "Kansas",
+      "dem": 48.0,
+      "rep": 45.0,
+      "margin": 3.0,
+      "leading": "DEM"
+    },
+    "MI": {
+      "name": "Michigan",
       "dem": 48.0,
       "rep": 47.0,
       "margin": 1.0,
       "leading": "DEM"
     },
-    "OH": {
-      "name": "Ohio",
-      "dem": 47.8,
-      "rep": 47.2,
-      "margin": 0.6,
-      "leading": "DEM"
-    },
-    "TX": {
-      "name": "Texas",
-      "dem": 47.5,
-      "rep": 47.1,
-      "margin": 0.4,
-      "leading": "DEM"
-    },
-    "AK": {
-      "name": "Alaska",
-      "dem": 48.2,
-      "rep": 46.8,
-      "margin": 1.4,
-      "leading": "DEM"
-    },
-    "KS": {
-      "name": "Kansas",
-      "dem": 47.0,
-      "rep": 48.2,
-      "margin": -1.2,
-      "leading": "REP"
-    },
-    "MI": {
-      "name": "Michigan",
-      "dem": 49.1,
-      "rep": 45.8,
-      "margin": 3.3,
-      "leading": "DEM"
-    },
     "NC": {
       "name": "Caroline du Nord",
-      "dem": 48.0,
-      "rep": 48.5,
-      "margin": -0.5,
-      "leading": "REP"
+      "dem": 50.0,
+      "rep": 43.0,
+      "margin": 7.0,
+      "leading": "DEM"
     },
     "GA": {
       "name": "Géorgie",
@@ -67,9 +67,9 @@
     },
     "FL": {
       "name": "Floride",
-      "dem": 45.5,
-      "rep": 49.2,
-      "margin": -3.7,
+      "dem": 45.0,
+      "rep": 47.0,
+      "margin": -2.0,
       "leading": "REP"
     }
   }
