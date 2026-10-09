@@ -1,66 +1,74 @@
 import json
 import re
 from datetime import datetime, timezone
-import cloudscraper
+from curl_cffi import requests
 
-# Liens directs vers chaque duel officiel de RealClearPolling
+# Configuration des 10 courses avec gestion automatique de l'ordre des slugs
 TARGET_RACES = {
-    "TX": {
-        "name": "Texas",
-        "url": "https://www.realclearpolling.com/polls/senate/general/2026/texas/paxton-vs-talarico",
-        "fallback_url": "https://www.realclearpolitics.com/epolls/2026/senate/tx/2026_texas_senate_cornyn_vs_talarico-8868.html",
-        "default_dem": 45.0, "default_rep": 45.0
-    },
     "IA": {
         "name": "Iowa",
-        "url": "https://www.realclearpolling.com/polls/senate/general/2026/iowa/hinson-vs-turek",
-        "default_dem": 47.0, "default_rep": 48.0
+        "slugs": ["turek-vs-hinson", "hinson-vs-turek"],
+        "state_path": "iowa",
+        "default_dem": 45.9, "default_rep": 45.2
+    },
+    "TX": {
+        "name": "Texas",
+        "slugs": ["paxton-vs-talarico-vs-brown", "talarico-vs-paxton", "talarico-vs-cornyn"],
+        "state_path": "texas",
+        "default_dem": 46.6, "default_rep": 45.0
     },
     "ME": {
         "name": "Maine",
-        "url": "https://www.realclearpolling.com/polls/senate/general/2026/maine/collins-vs-jackson",
-        "fallback_url": "https://www.realclearpolitics.com/epolls/2026/senate/me/2026_maine_senate_collins_vs_mills-8888.html",
+        "slugs": ["jackson-vs-collins", "collins-vs-jackson", "mills-vs-collins"],
+        "state_path": "maine",
         "default_dem": 46.0, "default_rep": 46.0
     },
     "OH": {
         "name": "Ohio",
-        "url": "https://www.realclearpolling.com/polls/senate/general/2026/ohio/husted-vs-brown",
+        "slugs": ["brown-vs-husted", "husted-vs-brown"],
+        "state_path": "ohio",
         "default_dem": 49.0, "default_rep": 45.0
     },
     "AK": {
         "name": "Alaska",
-        "url": "https://www.realclearpolling.com/polls/senate/general/2026/alaska/sullivan-vs-peltola",
+        "slugs": ["peltola-vs-sullivan", "sullivan-vs-peltola"],
+        "state_path": "alaska",
         "default_dem": 51.0, "default_rep": 49.0
     },
     "KS": {
         "name": "Kansas",
-        "url": "https://www.realclearpolling.com/polls/senate/general/2026/kansas/marshall-vs-hamilton",
+        "slugs": ["hamilton-vs-marshall", "marshall-vs-hamilton"],
+        "state_path": "kansas",
         "default_dem": 48.0, "default_rep": 45.0
     },
     "MI": {
         "name": "Michigan",
-        "url": "https://www.realclearpolling.com/polls/senate/general/2026/michigan/rogers-vs-elsayed",
+        "slugs": ["elsayed-vs-rogers", "rogers-vs-elsayed"],
+        "state_path": "michigan",
         "default_dem": 48.0, "default_rep": 47.0
     },
     "NC": {
         "name": "Caroline du Nord",
-        "url": "https://www.realclearpolling.com/polls/senate/general/2026/north-carolina/whatley-vs-cooper",
+        "slugs": ["cooper-vs-whatley", "whatley-vs-cooper"],
+        "state_path": "north-carolina",
         "default_dem": 50.0, "default_rep": 43.0
     },
     "GA": {
         "name": "Géorgie",
-        "url": "https://www.realclearpolling.com/polls/senate/general/2026/georgia/senate",
-        "default_dem": 48.8, "default_rep": 46.5
+        "slugs": ["ossoff-vs-taylor-greene", "taylor-green-vs-ossoff", "senate"],
+        "state_path": "georgia",
+        "default_dem": 51.0, "default_rep": 37.0
     },
     "FL": {
         "name": "Floride",
-        "url": "https://www.realclearpolling.com/polls/senate/general/2026/florida/moody-vs-nixon",
+        "slugs": ["nixon-vs-moody", "moody-vs-nixon"],
+        "state_path": "florida",
         "default_dem": 45.0, "default_rep": 47.0
     }
 }
 
 def extract_from_html(html):
-    # 1. Extraction directe depuis le JSON Next.js
+    # 1. Lecture directe du tableau JSON Next.js embarqué par RCP
     next_data_match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
     if next_data_match:
         try:
@@ -82,7 +90,7 @@ def extract_from_html(html):
         except Exception:
             pass
 
-    # 2. Extraction par regex sur le tableau HTML
+    # 2. Recherche par expression régulière dans le HTML
     matches = re.findall(r'RCP Average.*?(\d{1,2}\.\d|\d{1,2})\s*.*?(\d{1,2}\.\d|\d{1,2})', html, re.IGNORECASE | re.DOTALL)
     if matches:
         try:
@@ -93,35 +101,30 @@ def extract_from_html(html):
     return None, None
 
 def fetch_live_data():
-    # Instanciation du scraper anti-Cloudflare
-    scraper = cloudscraper.create_scraper(
-        browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True}
-    )
     states_result = {}
 
     for code, config in TARGET_RACES.items():
         dem_val, rep_val = None, None
-        urls_to_try = [config["url"]]
-        if "fallback_url" in config:
-            urls_to_try.append(config["fallback_url"])
-
-        for url in urls_to_try:
+        base_path = f"https://www.realclearpolling.com/polls/senate/general/2026/{config['state_path']}"
+        
+        # Test de chaque déclinaison d'URL jusqu'à trouver la bonne
+        for slug in config["slugs"]:
+            url = f"{base_path}/{slug}"
             try:
-                resp = scraper.get(url, timeout=12)
+                resp = requests.get(url, impersonate="chrome120", timeout=10)
                 if resp.status_code == 200:
                     dem_val, rep_val = extract_from_html(resp.text)
                     if dem_val is not None and rep_val is not None:
-                        print(f"✅ [{code}] En direct RCP : DEM {dem_val}% / REP {rep_val}% ({url})")
+                        print(f"✅ [{code}] Données extraites en direct RCP : DEM {dem_val}% / REP {rep_val}% ({url})")
                         break
-                else:
-                    print(f"⚠️ [{code}] Erreur {resp.status_code} sur {url}")
             except Exception as e:
-                print(f"⚠️ [{code}] Erreur sur {url} : {e}")
+                continue
 
+        # Si aucune URL n'a répondu, application des données de sécurité
         if dem_val is None or rep_val is None:
             dem_val = config["default_dem"]
             rep_val = config["default_rep"]
-            print(f"ℹ️ [{code}] Données de secours appliquées : DEM {dem_val}% / REP {rep_val}%")
+            print(f"ℹ️ [{code}] Valeur de référence appliquée : DEM {dem_val}% / REP {rep_val}%")
 
         margin = round(dem_val - rep_val, 1)
         states_result[code] = {
