@@ -1,7 +1,7 @@
 import json
 import re
-import urllib.request
 from datetime import datetime, timezone
+import cloudscraper
 
 # Liens directs vers chaque duel officiel de RealClearPolling
 TARGET_RACES = {
@@ -59,14 +59,8 @@ TARGET_RACES = {
     }
 }
 
-HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Language': 'en-US,en;q=0.9'
-}
-
 def extract_from_html(html):
-    # 1. Extraction directe depuis le flux JSON Next.js embarqué
+    # 1. Extraction directe depuis le JSON Next.js
     next_data_match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
     if next_data_match:
         try:
@@ -88,7 +82,7 @@ def extract_from_html(html):
         except Exception:
             pass
 
-    # 2. Recherche par regex sur le tableau de moyenne HTML
+    # 2. Extraction par regex sur le tableau HTML
     matches = re.findall(r'RCP Average.*?(\d{1,2}\.\d|\d{1,2})\s*.*?(\d{1,2}\.\d|\d{1,2})', html, re.IGNORECASE | re.DOTALL)
     if matches:
         try:
@@ -99,6 +93,10 @@ def extract_from_html(html):
     return None, None
 
 def fetch_live_data():
+    # Instanciation du scraper anti-Cloudflare
+    scraper = cloudscraper.create_scraper(
+        browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True}
+    )
     states_result = {}
 
     for code, config in TARGET_RACES.items():
@@ -109,13 +107,14 @@ def fetch_live_data():
 
         for url in urls_to_try:
             try:
-                req = urllib.request.Request(url, headers=HEADERS)
-                with urllib.request.urlopen(req, timeout=10) as resp:
-                    html = resp.read().decode('utf-8', errors='ignore')
-                    dem_val, rep_val = extract_from_html(html)
+                resp = scraper.get(url, timeout=12)
+                if resp.status_code == 200:
+                    dem_val, rep_val = extract_from_html(resp.text)
                     if dem_val is not None and rep_val is not None:
                         print(f"✅ [{code}] En direct RCP : DEM {dem_val}% / REP {rep_val}% ({url})")
                         break
+                else:
+                    print(f"⚠️ [{code}] Erreur {resp.status_code} sur {url}")
             except Exception as e:
                 print(f"⚠️ [{code}] Erreur sur {url} : {e}")
 
