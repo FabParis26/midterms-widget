@@ -15,7 +15,6 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-
     body { background: #f3f4f6; padding: 16px; display: flex; justify-content: center; }
 
     .dashboard {
@@ -24,14 +23,11 @@
       border-radius: 12px;
       padding: 20px;
       width: 100%;
-      max-width: 680px;
+      max-width: 720px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
 
     .dash-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       margin-bottom: 16px;
       border-bottom: 1px solid var(--border);
       padding-bottom: 12px;
@@ -71,6 +67,7 @@
     }
     .state-badge.dem { background: #eff6ff; color: var(--dem); }
     .state-badge.rep { background: #fef2f2; color: var(--rep); }
+    .state-badge.equal { background: #f3f4f6; color: var(--muted); }
 
     .progress-bar {
       height: 8px;
@@ -106,16 +103,14 @@
 
   <div class="dashboard">
     <div class="dash-header">
-      <div>
-        <div class="dash-title">Élections Sénat / Swing States</div>
-        <div class="dash-sub">Moyenne des sondages dans les 8 États clés</div>
-      </div>
+      <div class="dash-title">Élections Sénat / 10 Swing States</div>
+      <div class="dash-sub">Moyennes des sondages d'États</div>
     </div>
 
     <div class="states-grid" id="statesGrid"></div>
 
     <div class="dash-footer">
-      <span>Source : FiveThirtyEight</span>
+      <span id="sourceLabel">Source : RealClearPolling</span>
       <span id="lastUpdated">Mis à jour : --</span>
     </div>
   </div>
@@ -123,23 +118,35 @@
   <script>
     function renderDashboard(data) {
       document.getElementById('lastUpdated').textContent = `Mis à jour : ${data.last_updated}`;
+      if (data.source) {
+        document.getElementById('sourceLabel').textContent = `Source : ${data.source}`;
+      }
       const grid = document.getElementById('statesGrid');
       grid.innerHTML = '';
 
       Object.entries(data.states).forEach(([code, st]) => {
         const marginAbs = Math.abs(st.margin);
         const isDem = st.leading === 'DEM';
+        const isEqual = st.leading === 'EQUAL';
         const total = st.dem + st.rep;
         const demPct = (st.dem / total) * 100;
+
+        let badgeClass = 'equal';
+        let badgeText = 'Égalité';
+        if (isDem) {
+          badgeClass = 'dem';
+          badgeText = `DEM +${marginAbs}`;
+        } else if (st.leading === 'REP') {
+          badgeClass = 'rep';
+          badgeText = `REP +${marginAbs}`;
+        }
 
         const card = document.createElement('div');
         card.className = 'state-card';
         card.innerHTML = `
           <div class="state-top">
             <span class="state-name">${st.name} (${code})</span>
-            <span class="state-badge ${isDem ? 'dem' : 'rep'}">
-              ${isDem ? 'DEM' : 'REP'} +${marginAbs}
-            </span>
+            <span class="state-badge ${badgeClass}">${badgeText}</span>
           </div>
           <div class="progress-bar">
             <div class="p-dem" style="width: ${demPct}%"></div>
@@ -163,16 +170,19 @@
         renderDashboard(data);
       } catch {
         renderDashboard({
-          "last_updated": "2026-10-08 16:55 UTC",
+          "last_updated": "2026-10-09 08:00 UTC",
+          "source": "RealClearPolling",
           "states": {
-            "PA": { "name": "Pennsylvanie", "dem": 48.2, "rep": 46.5, "margin": 1.7, "leading": "DEM" },
-            "GA": { "name": "Géorgie", "dem": 49.1, "rep": 45.3, "margin": 3.8, "leading": "DEM" },
-            "AZ": { "name": "Arizona", "dem": 47.5, "rep": 47.1, "margin": 0.4, "leading": "DEM" },
-            "NV": { "name": "Nevada", "dem": 46.9, "rep": 47.8, "margin": -0.9, "leading": "REP" },
-            "WI": { "name": "Wisconsin", "dem": 48.8, "rep": 46.2, "margin": 2.6, "leading": "DEM" },
-            "MI": { "name": "Michigan", "dem": 49.5, "rep": 44.8, "margin": 4.7, "leading": "DEM" },
-            "NC": { "name": "Caroline du Nord", "dem": 50.1, "rep": 43.2, "margin": 6.9, "leading": "DEM" },
-            "TX": { "name": "Texas", "dem": 47.3, "rep": 46.8, "margin": 0.5, "leading": "DEM" }
+            "IA": { "name": "Iowa", "dem": 48.5, "rep": 48.5, "margin": 0.0, "leading": "EQUAL" },
+            "ME": { "name": "Maine", "dem": 48.0, "rep": 47.0, "margin": 1.0, "leading": "DEM" },
+            "OH": { "name": "Ohio", "dem": 47.8, "rep": 47.2, "margin": 0.6, "leading": "DEM" },
+            "TX": { "name": "Texas", "dem": 47.5, "rep": 47.1, "margin": 0.4, "leading": "DEM" },
+            "AK": { "name": "Alaska", "dem": 48.2, "rep": 46.8, "margin": 1.4, "leading": "DEM" },
+            "KS": { "name": "Kansas", "dem": 47.0, "rep": 48.2, "margin": -1.2, "leading": "REP" },
+            "MI": { "name": "Michigan", "dem": 49.1, "rep": 45.8, "margin": 3.3, "leading": "DEM" },
+            "NC": { "name": "Caroline du Nord", "dem": 48.0, "rep": 48.5, "margin": -0.5, "leading": "REP" },
+            "GA": { "name": "Géorgie", "dem": 48.8, "rep": 46.5, "margin": 2.3, "leading": "DEM" },
+            "FL": { "name": "Floride", "dem": 45.5, "rep": 49.2, "margin": -3.7, "leading": "REP" }
           }
         });
       }
