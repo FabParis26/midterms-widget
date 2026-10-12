@@ -1,19 +1,12 @@
 {
-  "last_updated": "2026-10-12 07:53 UTC",
+  "last_updated": "2026-10-12 07:58 UTC",
   "source": "Wikipedia API (Tableaux de sondages)",
   "states": {
-    "TX": {
-      "name": "Texas",
-      "dem": 49.6,
-      "rep": 45.6,
-      "margin": 4.0,
-      "leading": "DEM"
-    },
-    "NC": {
-      "name": "Caroline du Nord",
-      "dem": 50.7,
-      "rep": 41.5,
-      "margin": 9.2,
+    "GA": {
+      "name": "Géorgie",
+      "dem": 48.0,
+      "rep": 37.0,
+      "margin": 11.0,
       "leading": "DEM"
     },
     "MI": {
@@ -23,6 +16,13 @@
       "margin": 4.0,
       "leading": "DEM"
     },
+    "NH": {
+      "name": "New Hampshire",
+      "dem": 48.2,
+      "rep": 42.8,
+      "margin": 5.4,
+      "leading": "DEM"
+    },
     "ME": {
       "name": "Maine",
       "dem": 49.2,
@@ -30,18 +30,11 @@
       "margin": 2.0,
       "leading": "DEM"
     },
-    "KS": {
-      "name": "Kansas",
-      "dem": 45.8,
-      "rep": 46.0,
-      "margin": -0.2,
-      "leading": "REP"
-    },
-    "IA": {
-      "name": "Iowa",
-      "dem": 48.0,
-      "rep": 46.4,
-      "margin": 1.6,
+    "NC": {
+      "name": "Caroline du Nord",
+      "dem": 50.7,
+      "rep": 41.5,
+      "margin": 9.2,
       "leading": "DEM"
     },
     "OH": {
@@ -51,6 +44,20 @@
       "margin": 3.2,
       "leading": "DEM"
     },
+    "TX": {
+      "name": "Texas",
+      "dem": 49.6,
+      "rep": 45.6,
+      "margin": 4.0,
+      "leading": "DEM"
+    },
+    "IA": {
+      "name": "Iowa",
+      "dem": 48.0,
+      "rep": 46.4,
+      "margin": 1.6,
+      "leading": "DEM"
+    },
     "AK": {
       "name": "Alaska",
       "dem": 46.0,
@@ -58,18 +65,11 @@
       "margin": 5.0,
       "leading": "DEM"
     },
-    "GA": {
-      "name": "Géorgie",
-      "dem": 48.0,
-      "rep": 37.0,
-      "margin": 11.0,
-      "leading": "DEM"
-    },
-    "FL": {
-      "name": "Floride",
-      "dem": 40.0,
-      "rep": 47.0,
-      "margin": -7.0,
+    "KS": {
+      "name": "Kansas",
+      "dem": 45.8,
+      "rep": 46.0,
+      "margin": -0.2,
       "leading": "REP"
     }
   }
