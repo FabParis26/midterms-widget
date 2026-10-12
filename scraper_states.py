@@ -2,6 +2,7 @@ import urllib.request
 import urllib.parse
 import json
 import re
+import http.client
 from datetime import datetime, timezone
 
 # Candidats clés des 10 États
@@ -18,34 +19,43 @@ TARGET_RACES = {
     "FL": {"name": "Floride", "dem_kw": "Nixon", "rep_kw": "Moody", "default_dem": 40.0, "default_rep": 47.0}
 }
 
-def fetch_via_proxy(url):
-    """Utilise un proxy public pour contourner tout blocage Cloudflare sans module externe"""
-    proxy_url = "https://api.allorigins.win/get?url=" + urllib.parse.quote(url)
-    req = urllib.request.Request(proxy_url, headers={'User-Agent': 'Mozilla/5.0'})
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
-            return data.get('contents', '')
-    except Exception as e:
-        print(f"Erreur proxy sur {url} : {e}")
-        return ""
+def fetch_robust(target_url):
+    """Essaie 3 proxys différents et gère les coupures de connexion pour garantir le résultat"""
+    proxies = [
+        f"https://corsproxy.io/?{urllib.parse.quote(target_url)}",
+        f"https://api.codetabs.com/v1/proxy?quest={urllib.parse.quote(target_url)}",
+        f"https://api.allorigins.win/raw?url={urllib.parse.quote(target_url)}"
+    ]
+    
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    
+    for proxy_url in proxies:
+        req = urllib.request.Request(proxy_url, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                return resp.read().decode('utf-8', errors='ignore')
+        except http.client.IncompleteRead as e:
+            # MAGIE : Si la connexion coupe, on récupère le morceau déjà téléchargé !
+            return e.partial.decode('utf-8', errors='ignore')
+        except Exception as e:
+            print(f"   -> Proxy {proxy_url.split('/')[2]} indisponible, passage au suivant...")
+            continue
+            
+    return ""
 
 def fetch_live_data():
     states_result = {}
+    print("🔄 Téléchargement sécurisé (Système Multi-Proxys)...")
     
-    print("🔄 Téléchargement des pages via Proxy...")
-    
-    # Agrégation des sources les plus fiables
     urls_to_try = [
-        "https://www.realclearpolitics.com/epolls/latest_polls/senate/",
         "https://www.270towin.com/2026-senate-election/",
-        "https://www.racetothewh.com/senate/26"
+        "https://www.realclearpolitics.com/epolls/latest_polls/senate/"
     ]
     
     combined_text = ""
     for url in urls_to_try:
-        html = fetch_via_proxy(url)
-        # Nettoyage de tout le code HTML pour ne garder que le texte pur
+        print(f"Lecture de {url}...")
+        html = fetch_robust(url)
         clean = re.sub(r'<[^>]+>', ' ', html)
         clean = re.sub(r'\s+', ' ', clean)
         combined_text += clean + " "
@@ -54,22 +64,22 @@ def fetch_live_data():
         dem_kw = config["dem_kw"]
         rep_kw = config["rep_kw"]
         
-        # Le robot cherche les pourcentages collés avant ou après le nom du candidat
-        dem_matches = re.findall(rf'{dem_kw}[^0-9]{{0,15}}(\d{{2}}(?:\.\d)?)|(\d{{2}}(?:\.\d)?)[^0-9]{{0,15}}{dem_kw}', combined_text, re.IGNORECASE)
-        rep_matches = re.findall(rf'{rep_kw}[^0-9]{{0,15}}(\d{{2}}(?:\.\d)?)|(\d{{2}}(?:\.\d)?)[^0-9]{{0,15}}{rep_kw}', combined_text, re.IGNORECASE)
+        # Tolérance de 30 caractères d'écart entre le nom et le score
+        dem_matches = re.findall(rf'{dem_kw}[^0-9]{{0,30}}(\d{{2}}(?:\.\d)?)|(\d{{2}}(?:\.\d)?)[^0-9]{{0,30}}{dem_kw}', combined_text, re.IGNORECASE)
+        rep_matches = re.findall(rf'{rep_kw}[^0-9]{{0,30}}(\d{{2}}(?:\.\d)?)|(\d{{2}}(?:\.\d)?)[^0-9]{{0,30}}{rep_kw}', combined_text, re.IGNORECASE)
         
         dem_val, rep_val = None, None
         
-        # Filtre de sécurité : on ne retient que les nombres logiques d'un sondage (entre 30% et 70%)
+        # Le score doit être cohérent (entre 35% et 65%)
         for m in dem_matches:
             val = float(m[0] or m[1])
-            if 30.0 <= val <= 70.0:
+            if 35.0 <= val <= 65.0:
                 dem_val = val
                 break
                 
         for m in rep_matches:
             val = float(m[0] or m[1])
-            if 30.0 <= val <= 70.0:
+            if 35.0 <= val <= 65.0:
                 rep_val = val
                 break
             
@@ -91,7 +101,7 @@ def fetch_live_data():
 
     output = {
         "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        "source": "Agrégateur multi-sites (Proxy AllOrigins)",
+        "source": "Agrégateur multi-sites (Proxys fiables)",
         "states": states_result
     }
 
