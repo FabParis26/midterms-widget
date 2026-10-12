@@ -1,40 +1,40 @@
 {
-  "last_updated": "2026-10-12 07:58 UTC",
-  "source": "Wikipedia API (Tableaux de sondages)",
+  "last_updated": "2026-10-12 08:03 UTC",
+  "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
       "name": "Géorgie",
-      "dem": 48.0,
-      "rep": 37.0,
-      "margin": 11.0,
+      "dem": 51.0,
+      "rep": 37.7,
+      "margin": 13.3,
       "leading": "DEM"
     },
     "MI": {
       "name": "Michigan",
-      "dem": 47.8,
-      "rep": 43.8,
-      "margin": 4.0,
+      "dem": 47.9,
+      "rep": 44.5,
+      "margin": 3.4,
       "leading": "DEM"
     },
     "NH": {
       "name": "New Hampshire",
-      "dem": 48.2,
-      "rep": 42.8,
-      "margin": 5.4,
+      "dem": 49.3,
+      "rep": 42.9,
+      "margin": 6.4,
       "leading": "DEM"
     },
     "ME": {
       "name": "Maine",
       "dem": 49.2,
-      "rep": 47.2,
-      "margin": 2.0,
+      "rep": 47.0,
+      "margin": 2.2,
       "leading": "DEM"
     },
     "NC": {
       "name": "Caroline du Nord",
-      "dem": 50.7,
-      "rep": 41.5,
-      "margin": 9.2,
+      "dem": 50.2,
+      "rep": 40.9,
+      "margin": 9.3,
       "leading": "DEM"
     },
     "OH": {
@@ -46,16 +46,16 @@
     },
     "TX": {
       "name": "Texas",
-      "dem": 49.6,
-      "rep": 45.6,
-      "margin": 4.0,
+      "dem": 48.6,
+      "rep": 45.1,
+      "margin": 3.5,
       "leading": "DEM"
     },
     "IA": {
       "name": "Iowa",
-      "dem": 48.0,
-      "rep": 46.4,
-      "margin": 1.6,
+      "dem": 46.9,
+      "rep": 45.7,
+      "margin": 1.2,
       "leading": "DEM"
     },
     "AK": {
@@ -67,10 +67,10 @@
     },
     "KS": {
       "name": "Kansas",
-      "dem": 45.8,
-      "rep": 46.0,
-      "margin": -0.2,
-      "leading": "REP"
+      "dem": 46.3,
+      "rep": 45.5,
+      "margin": 0.8,
+      "leading": "DEM"
     }
   }
 }
