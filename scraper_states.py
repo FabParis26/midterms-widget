@@ -43,6 +43,7 @@ def parse_wikitable_poll(html_content, dem_kw, rep_kw):
         dem_col_idx = None
         rep_col_idx = None
         
+        # Chercher dans quelle colonne se trouvent les candidats
         for row in rows:
             headers = re.findall(r'<th[^>]*>(.*?)</th>', row, re.DOTALL | re.IGNORECASE)
             if headers:
@@ -55,7 +56,11 @@ def parse_wikitable_poll(html_content, dem_kw, rep_kw):
                 if dem_col_idx is not None and rep_col_idx is not None:
                     break
                     
+        # Extraire et faire la moyenne des 3 derniers sondages
         if dem_col_idx is not None and rep_col_idx is not None:
+            dem_scores = []
+            rep_scores = []
+            
             for row in rows:
                 cells = re.findall(r'<td[^>]*>(.*?)</td>', row, re.DOTALL | re.IGNORECASE)
                 if len(cells) > max(dem_col_idx, rep_col_idx):
@@ -69,7 +74,17 @@ def parse_wikitable_poll(html_content, dem_kw, rep_kw):
                         d_val = float(d_match.group(1))
                         r_val = float(r_match.group(1))
                         if 20.0 <= d_val <= 80.0 and 20.0 <= r_val <= 80.0:
-                            return d_val, r_val
+                            dem_scores.append(d_val)
+                            rep_scores.append(r_val)
+                            # On s'arrête dès qu'on a 3 sondages valides
+                            if len(dem_scores) == 3:
+                                break
+                                
+            if dem_scores and rep_scores:
+                avg_dem = round(sum(dem_scores) / len(dem_scores), 1)
+                avg_rep = round(sum(rep_scores) / len(rep_scores), 1)
+                return avg_dem, avg_rep
+                
     return None, None
 
 def fetch_live_data():
@@ -81,7 +96,7 @@ def fetch_live_data():
         dem_val, rep_val = parse_wikitable_poll(state_html, config["dem_kw"], config["rep_kw"])
 
         if dem_val is not None and rep_val is not None:
-            print(f"✅ [{code}] Extrait de la wikitable Wikipedia : DEM {dem_val}% / REP {rep_val}%")
+            print(f"✅ [{code}] Moyenne Wikipedia : DEM {dem_val}% / REP {rep_val}%")
         else:
             dem_val = config["default_dem"]
             rep_val = config["default_rep"]
@@ -98,7 +113,7 @@ def fetch_live_data():
 
     output = {
         "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        "source": "Wikipedia API (Tableaux de sondages)",
+        "source": "Instituts de sondages (via Wikipedia)",
         "states": states_result
     }
 
