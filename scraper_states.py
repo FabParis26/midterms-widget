@@ -4,17 +4,18 @@ import urllib.request
 import urllib.parse
 from datetime import datetime, timezone
 
+# Les 10 vraies batailles sénatoriales de 2026
 TARGET_RACES = {
-    "TX": {"name": "Texas", "wiki_page": "2026_United_States_Senate_election_in_Texas", "dem_kw": "Talarico", "rep_kw": "Paxton", "default_dem": 48.1, "default_rep": 45.3},
-    "NC": {"name": "Caroline du Nord", "wiki_page": "2026_United_States_Senate_election_in_North_Carolina", "dem_kw": "Cooper", "rep_kw": "Whatley", "default_dem": 49.8, "default_rep": 41.0},
-    "MI": {"name": "Michigan", "wiki_page": "2026_United_States_Senate_election_in_Michigan", "dem_kw": "El-Sayed", "rep_kw": "Rogers", "default_dem": 48.1, "default_rep": 44.9},
-    "ME": {"name": "Maine", "wiki_page": "2026_United_States_Senate_election_in_Maine", "dem_kw": "Jackson", "rep_kw": "Collins", "default_dem": 47.5, "default_rep": 46.8},
-    "KS": {"name": "Kansas", "wiki_page": "2026_United_States_Senate_election_in_Kansas", "dem_kw": "Hamilton", "rep_kw": "Marshall", "default_dem": 45.4, "default_rep": 45.6},
-    "IA": {"name": "Iowa", "wiki_page": "2026_United_States_Senate_election_in_Iowa", "dem_kw": "Turek", "rep_kw": "Hinson", "default_dem": 45.9, "default_rep": 45.2},
-    "OH": {"name": "Ohio", "wiki_page": "2026_United_States_Senate_election_in_Ohio", "dem_kw": "Brown", "rep_kw": "Husted", "default_dem": 47.3, "default_rep": 44.1},
-    "AK": {"name": "Alaska", "wiki_page": "2026_United_States_Senate_election_in_Alaska", "dem_kw": "Peltola", "rep_kw": "Sullivan", "default_dem": 48.5, "default_rep": 47.3},
     "GA": {"name": "Géorgie", "wiki_page": "2026_United_States_Senate_election_in_Georgia", "dem_kw": "Ossoff", "rep_kw": "Greene", "default_dem": 51.0, "default_rep": 37.0},
-    "FL": {"name": "Floride", "wiki_page": "2026_United_States_Senate_election_in_Florida", "dem_kw": "Nixon", "rep_kw": "Moody", "default_dem": 40.0, "default_rep": 47.0}
+    "MI": {"name": "Michigan", "wiki_page": "2026_United_States_Senate_election_in_Michigan", "dem_kw": "El-Sayed", "rep_kw": "Rogers", "default_dem": 48.1, "default_rep": 44.9},
+    "NH": {"name": "New Hampshire", "wiki_page": "2026_United_States_Senate_election_in_New_Hampshire", "dem_kw": "Pappas", "rep_kw": "Sununu", "default_dem": 49.0, "default_rep": 46.0},
+    "ME": {"name": "Maine", "wiki_page": "2026_United_States_Senate_election_in_Maine", "dem_kw": "Jackson", "rep_kw": "Collins", "default_dem": 47.5, "default_rep": 46.8},
+    "NC": {"name": "Caroline du Nord", "wiki_page": "2026_United_States_Senate_election_in_North_Carolina", "dem_kw": "Cooper", "rep_kw": "Whatley", "default_dem": 49.8, "default_rep": 41.0},
+    "OH": {"name": "Ohio", "wiki_page": "2026_United_States_Senate_election_in_Ohio", "dem_kw": "Brown", "rep_kw": "Husted", "default_dem": 47.3, "default_rep": 44.1},
+    "TX": {"name": "Texas", "wiki_page": "2026_United_States_Senate_election_in_Texas", "dem_kw": "Talarico", "rep_kw": "Paxton", "default_dem": 48.1, "default_rep": 45.3},
+    "IA": {"name": "Iowa", "wiki_page": "2026_United_States_Senate_election_in_Iowa", "dem_kw": "Turek", "rep_kw": "Hinson", "default_dem": 45.9, "default_rep": 45.2},
+    "AK": {"name": "Alaska", "wiki_page": "2026_United_States_Senate_election_in_Alaska", "dem_kw": "Peltola", "rep_kw": "Sullivan", "default_dem": 48.5, "default_rep": 47.3},
+    "KS": {"name": "Kansas", "wiki_page": "2026_United_States_Senate_election_in_Kansas", "dem_kw": "Hamilton", "rep_kw": "Marshall", "default_dem": 45.4, "default_rep": 45.6}
 }
 
 HEADERS = {'User-Agent': 'MidtermsWidget/1.0 (https://github.com/fabparis26/midterms-widget)'}
@@ -104,7 +105,7 @@ def fetch_live_data():
     with open("states_data.json", "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print("🚀 Fichier states_data.json généré avec succès !")
+    print("🚀 Fichier states_data.json mis à jour !")
 
 if __name__ == "__main__":
     fetch_live_data()
