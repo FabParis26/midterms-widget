@@ -27,47 +27,64 @@ def fetch_wiki_html(page_title):
             data = json.loads(resp.read().decode('utf-8'))
             if 'parse' in data and 'text' in data['parse']:
                 return data['parse']['text']['*']
-    except Exception as e:
-        print(f"  Erreur API Wikipedia ({page_title}) : {e}")
+    except Exception:
+        pass
     return ""
+
+def parse_wikitable_poll(html_content, dem_kw, rep_kw):
+    tables = re.findall(r'<table[^>]*class="[^"]*wikitable[^"]*"[^>]*>(.*?)</table>', html_content, re.DOTALL | re.IGNORECASE)
+    
+    for table in tables:
+        rows = re.findall(r'<tr[^>]*>(.*?)</tr>', table, re.DOTALL | re.IGNORECASE)
+        if not rows:
+            continue
+            
+        dem_col_idx = None
+        rep_col_idx = None
+        
+        for row in rows:
+            headers = re.findall(r'<th[^>]*>(.*?)</th>', row, re.DOTALL | re.IGNORECASE)
+            if headers:
+                clean_headers = [re.sub(r'<[^>]+>', '', h).strip() for h in headers]
+                for idx, h in enumerate(clean_headers):
+                    if dem_kw.lower() in h.lower():
+                        dem_col_idx = idx
+                    elif rep_kw.lower() in h.lower():
+                        rep_col_idx = idx
+                if dem_col_idx is not None and rep_col_idx is not None:
+                    break
+                    
+        if dem_col_idx is not None and rep_col_idx is not None:
+            for row in rows:
+                cells = re.findall(r'<td[^>]*>(.*?)</td>', row, re.DOTALL | re.IGNORECASE)
+                if len(cells) > max(dem_col_idx, rep_col_idx):
+                    d_text = re.sub(r'<[^>]+>', '', cells[dem_col_idx]).strip()
+                    r_text = re.sub(r'<[^>]+>', '', cells[rep_col_idx]).strip()
+                    
+                    d_match = re.search(r'\b(\d{2}(?:\.\d)?)\b', d_text)
+                    r_match = re.search(r'\b(\d{2}(?:\.\d)?)\b', r_text)
+                    
+                    if d_match and r_match:
+                        d_val = float(d_match.group(1))
+                        r_val = float(r_match.group(1))
+                        if 20.0 <= d_val <= 80.0 and 20.0 <= r_val <= 80.0:
+                            return d_val, r_val
+    return None, None
 
 def fetch_live_data():
     states_result = {}
     print("Connexion à l'API Wikipedia...")
-    
-    main_html = fetch_wiki_html("2026_United_States_Senate_elections")
-    main_clean = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', main_html))
 
     for code, config in TARGET_RACES.items():
         state_html = fetch_wiki_html(config["wiki_page"])
-        combined_text = main_clean + " " + re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', state_html))
-
-        dem_kw = config["dem_kw"]
-        rep_kw = config["rep_kw"]
-
-        dem_matches = re.findall(rf'{dem_kw}[^0-9]{{0,30}}(\d{{2}}(?:\.\d)?)|(\d{{2}}(?:\.\d)?)[^0-9]{{0,30}}{dem_kw}', combined_text, re.IGNORECASE)
-        rep_matches = re.findall(rf'{rep_kw}[^0-9]{{0,30}}(\d{{2}}(?:\.\d)?)|(\d{{2}}(?:\.\d)?)[^0-9]{{0,30}}{rep_kw}', combined_text, re.IGNORECASE)
-
-        dem_val, rep_val = None, None
-
-        for m in dem_matches:
-            val = float(m[0] or m[1])
-            if 35.0 <= val <= 65.0:
-                dem_val = val
-                break
-
-        for m in rep_matches:
-            val = float(m[0] or m[1])
-            if 35.0 <= val <= 65.0:
-                rep_val = val
-                break
+        dem_val, rep_val = parse_wikitable_poll(state_html, config["dem_kw"], config["rep_kw"])
 
         if dem_val is not None and rep_val is not None:
-            print(f"[{code}] Données en direct Wikipedia : DEM {dem_val}% / REP {rep_val}%")
+            print(f"✅ [{code}] Extrait de la wikitable Wikipedia : DEM {dem_val}% / REP {rep_val}%")
         else:
             dem_val = config["default_dem"]
             rep_val = config["default_rep"]
-            print(f"[{code}] Sécurité activée : DEM {dem_val}% / REP {rep_val}%")
+            print(f"ℹ️ [{code}] Valeur de référence appliquée : DEM {dem_val}% / REP {rep_val}%")
 
         margin = round(dem_val - rep_val, 1)
         states_result[code] = {
@@ -80,14 +97,14 @@ def fetch_live_data():
 
     output = {
         "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        "source": "Wikipedia API (En direct)",
+        "source": "Wikipedia API (Tableaux de sondages)",
         "states": states_result
     }
 
     with open("states_data.json", "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print("Fichier states_data.json généré avec succès !")
+    print("🚀 Fichier states_data.json généré avec succès !")
 
 if __name__ == "__main__":
     fetch_live_data()
