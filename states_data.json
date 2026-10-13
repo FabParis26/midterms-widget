@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-13 12:26 UTC",
+  "last_updated": "2026-10-13 18:25 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -32,9 +32,9 @@
     },
     "NC": {
       "name": "Caroline du Nord",
-      "dem": 50.1,
-      "rep": 40.9,
-      "margin": 9.2,
+      "dem": 50.7,
+      "rep": 40.8,
+      "margin": 9.9,
       "leading": "DEM"
     },
     "OH": {
@@ -46,9 +46,9 @@
     },
     "TX": {
       "name": "Texas",
-      "dem": 48.6,
-      "rep": 45.1,
-      "margin": 3.5,
+      "dem": 48.4,
+      "rep": 45.2,
+      "margin": 3.2,
       "leading": "DEM"
     },
     "IA": {
