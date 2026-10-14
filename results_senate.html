@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Résultats Sénat 2026 - Soirée Électorale</title>
+  <style>
+    :root {
+      --dem-color: #2563eb;
+      --rep-color: #dc2626;
+      --tossup-color: #eab308;
+      --no-election: #e2e8f0;
+      --no-election-text: #94a3b8;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: transparent; padding: 12px; color: var(--text-main); }
+    .widget-container { max-width: 680px; margin: 0 auto; background: var(--bg-card); border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #edf2f7; }
+
+    /* En-tête */
+    .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+    .title { font-size: 1.15rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .live-badge { font-size: 0.75rem; font-weight: 700; color: #dc2626; display: flex; align-items: center; gap: 5px; }
+    .live-dot { width: 8px; height: 8px; background: #dc2626; border-radius: 50%; animation: pulse 1.5s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.15); }
+    }
+
+    /* Jauge de majorité */
+    .gauge-wrapper { margin-bottom: 18px; }
+    .gauge-scores { display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; }
+    .score-dem { color: var(--dem-color); }
+    .score-rep { color: var(--rep-color); }
+    .gauge-bar { position: relative; height: 18px; background: #f1f5f9; border-radius: 9px; overflow: hidden; display: flex; }
+    .bar-segment-dem { background: var(--dem-color); transition: width 0.4s ease; }
+    .bar-segment-rep { background: var(--rep-color); margin-left: auto; transition: width 0.4s ease; }
+    .majority-line { position: absolute; left: 51%; top: 0; bottom: 0; width: 2px; background: #000; z-index: 2; }
+    .majority-label { font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 4px; font-weight: 600; }
+
+    /* Cartogramme en grille */
+    .grid-map {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 5px;
+      margin: 18px 0;
+    }
+    .tile {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .tile:hover { transform: scale(1.12); z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+
+    /* Couleurs de statut */
+    .tile.called-dem { background: var(--dem-color); color: #fff; }
+    .tile.called-rep { background: var(--rep-color); color: #fff; }
+    .tile.tossup { background: var(--tossup-color); color: #000; }
+    .tile.no-election { background: var(--no-election); color: var(--no-election-text); cursor: default; }
+    .tile.no-election:hover { transform: none; box-shadow: none; }
+
+    /* Légende */
+    .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; font-size: 0.72rem; color: var(--text-muted); margin-top: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+
+    /* Fiche d'information État */
+    .state-info {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 14px;
+      font-size: 0.85rem;
+      min-height: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer { margin-top: 12px; display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<div class="widget-container">
+  <div class="header">
+    <div class="title">Bataille pour le Sénat 2026</div>
+    <div class="live-badge"><span class="live-dot"></span> RÉSULTATS</div>
+  </div>
+
+  <div class="gauge-wrapper">
+    <div class="gauge-scores">
+      <span class="score-dem" id="dem-count">Démocrates : 0</span>
+      <span class="score-rep" id="rep-count">0 : Républicains</span>
+    </div>
+    <div class="gauge-bar">
+      <div class="bar-segment-dem" id="dem-bar" style="width: 0%;"></div>
+      <div class="majority-line"></div>
+      <div class="bar-segment-rep" id="rep-bar" style="width: 0%;"></div>
+    </div>
+    <div class="majority-label">Majorité fixée à 51 sièges</div>
+  </div>
+
+  <div class="grid-map" id="map-grid"></div>
+
+  <div class="state-info" id="info-box">
+    <span>Cliquez ou survolez un État pour afficher les détails du scrutin.</span>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--dem-color);"></div> Démocrate déclaré</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--rep-color);"></div> Républicain déclaré</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--tossup-color);"></div> Dépouillement / Indécis</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--no-election);"></div> Pas d'élection en 2026</div>
+  </div>
+
+  <div class="footer">
+    <span id="source-label">Source : API Wikipédia / En direct</span>
+    <span id="update-label">Mis à jour : en direct</span>
+  </div>
+</div>
+
+<script>
+  const MAP_TILES = [
+    { code: "AK", r: 1, c: 1 },                                                                                          { code: "ME", r: 1, c: 12 },
+    { code: "WI", r: 2, c: 6 },                                                               { code: "VT", r: 2, c: 11 }, { code: "NH", r: 2, c: 12 },
+    { code: "WA", r: 3, c: 2 }, { code: "ID", r: 3, c: 3 }, { code: "MT", r: 3, c: 4 }, { code: "ND", r: 3, c: 5 }, { code: "MN", r: 3, c: 6 }, { code: "IL", r: 3, c: 7 }, { code: "MI", r: 3, c: 8 }, { code: "NY", r: 3, c: 10 }, { code: "MA", r: 3, c: 11 }, { code: "RI", r: 3, c: 12 },
+    { code: "OR", r: 4, c: 2 }, { code: "NV", r: 4, c: 3 }, { code: "WY", r: 4, c: 4 }, { code: "SD", r: 4, c: 5 }, { code: "IA", r: 4, c: 6 }, { code: "IN", r: 4, c: 7 }, { code: "OH", r: 4, c: 8 }, { code: "PA", r: 4, c: 9 }, { code: "NJ", r: 4, c: 10 }, { code: "CT", r: 4, c: 11 },
+    { code: "CA", r: 5, c: 2 }, { code: "UT", r: 5, c: 3 }, { code: "CO", r: 5, c: 4 }, { code: "NE", r: 5, c: 5 }, { code: "MO", r: 5, c: 6 }, { code: "KY", r: 5, c: 7 }, { code: "WV", r: 5, c: 8 }, { code: "VA", r: 5, c: 9 }, { code: "MD", r: 5, c: 10 }, { code: "DE", r: 5, c: 11 },
+    { code: "AZ", r: 6, c: 3 }, { code: "NM", r: 6, c: 4 }, { code: "KS", r: 6, c: 5 }, { code: "AR", r: 6, c: 6 }, { code: "TN", r: 6, c: 7 }, { code: "NC", r: 6, c: 8 }, { code: "SC", r: 6, c: 9 },
+                                { code: "OK", r: 7, c: 5 }, { code: "LA", r: 7, c: 6 }, { code: "MS", r: 7, c: 7 }, { code: "AL", r: 7, c: 8 }, { code: "GA", r: 7, c: 9 },
+    { code: "HI", r: 8, c: 1 },                             { code: "TX", r: 8, c: 5 },                                                           { code: "FL", r: 8, c: 9 }
+  ];
+
+  const STATE_NAMES = {
+    AL:"Alabama", AK:"Alaska", AZ:"Arizona", AR:"Arkansas", CA:"Californie", CO:"Colorado", CT:"Connecticut",
+    DE:"Delaware", FL:"Floride", GA:"Géorgie", HI:"Hawaï", ID:"Idaho", IL:"Illinois", IN:"Indiana", IA:"Iowa",
+    KS:"Kansas", KY:"Kentucky", LA:"Louisiane", ME:"Maine", MD:"Maryland", MA:"Massachusetts", MI:"Michigan",
+    MN:"Minnesota", MS:"Mississippi", MO:"Missouri", MT:"Montana", NE:"Nebraska", NV:"Nevada", NH:"New Hampshire",
+    NJ:"New Jersey", NM:"Nouveau-Mexique", NY:"New York", NC:"Caroline du Nord", ND:"Dakota du Nord", OH:"Ohio",
+    OK:"Oklahoma", OR:"Oregon", PA:"Pennsylvanie", RI:"Rhode Island", SC:"Caroline du Sud", SD:"Dakota du Sud",
+    TN:"Tennessee", TX:"Texas", UT:"Utah", VT:"Vermont", VA:"Virginie", WA:"Washington", WV:"Virginie-Occidentale",
+    WI:"Wisconsin", WY:"Wyoming"
+  };
+
+  const NO_ELECTION_2026 = new Set(["AZ", "CA", "CT", "HI", "IN", "MD", "MO", "NV", "NY", "ND", "PA", "UT", "VT", "WA", "WI"]);
+
+  async function loadData() {
+    let data;
+    try {
+      // NOTE: Appel au fichier spécifique aux résultats : results_senate.json
+      const resp = await fetch("results_senate.json?v=" + Date.now());
+      if (!resp.ok) throw new Error("Fichier absent");
+      data = await resp.json();
+    } catch {
+      data = {
+        baseline_dem: 32,
+        baseline_rep: 33,
+        updated: "En attente du dépouillement",
+        results: {
+            "GA": { "status": "tossup", "note": "En attente des résultats" },
+            "MI": { "status": "tossup", "note": "En attente des résultats" },
+            "NH": { "status": "tossup", "note": "En attente des résultats" },
+            "ME": { "status": "tossup", "note": "En attente des résultats" },
+            "NC": { "status": "tossup", "note": "En attente des résultats" },
+            "OH": { "status": "tossup", "note": "En attente des résultats" },
+            "TX": { "status": "tossup", "note": "En attente des résultats" },
+            "IA": { "status": "tossup", "note": "En attente des résultats" },
+            "AK": { "status": "tossup", "note": "En attente des résultats" },
+            "KS": { "status": "tossup", "note": "En attente des résultats" }
+        }
+      };
+    }
+    render(data);
+  }
+
+  function render(data) {
+    let demTotal = data.baseline_dem || 0;
+    let repTotal = data.baseline_rep || 0;
+    const grid = document.getElementById("map-grid");
+    grid.innerHTML = "";
+
+    MAP_TILES.forEach(t => {
+      const div = document.createElement("div");
+      div.className = "tile";
+      div.style.gridRow = t.r;
+      div.style.gridColumn = t.c;
+      div.textContent = t.code;
+
+      const info = (data.results && data.results[t.code]) || {};
+      const noElec = NO_ELECTION_2026.has(t.code);
+
+      if (noElec) {
+        div.classList.add("no-election");
+      } else if (info.status === "called_dem") {
+        div.classList.add("called-dem");
+        demTotal++;
+      } else if (info.status === "called_rep") {
+        div.classList.add("called-rep");
+        repTotal++;
+      } else {
+        div.classList.add("tossup");
+      }
+
+      div.addEventListener("mouseenter", () => showInfo(t.code, info, noElec));
+      div.addEventListener("click", () => showInfo(t.code, info, noElec));
+      grid.appendChild(div);
+    });
+
+    document.getElementById("dem-count").textContent = `Démocrates : ${demTotal}`;
+    document.getElementById("rep-count").textContent = `${repTotal} : Républicains`;
+    document.getElementById("dem-bar").style.width = demTotal + "%";
+    document.getElementById("rep-bar").style.width = repTotal + "%";
+    document.getElementById("update-label").textContent = "Mis à jour : " + (data.updated || "Récemment");
+  }
+
+  function showInfo(code, info, noElec) {
+    const box = document.getElementById("info-box");
+    const name = STATE_NAMES[code] || code;
+
+    if (noElec) {
+      box.innerHTML = `<strong>${name} (${code})</strong> <span style="color:var(--text-muted);">Aucun siège renouvelé en 2026</span>`;
+      return;
+    }
+
+    let statusText = "En attente des premiers dépouillements";
+    if (info.status === "called_dem") statusText = `<strong style="color:var(--dem-color)">Victoire Démocrate déclarée</strong> (${info.winner || ""})`;
+    else if (info.status === "called_rep") statusText = `<strong style="color:var(--rep-color)">Victoire Républicaine déclarée</strong> (${info.winner || ""})`;
+    else if (info.status === "tossup") statusText = `<strong style="color:var(--tossup-color)">Indécis</strong> — ${info.note || "En cours de décompte"}`;
+
+    box.innerHTML = `<div><strong>${name} (${code})</strong> : ${statusText}</div>`;
+  }
+
+  loadData();
+  setInterval(loadData, 60000);
+</script>
+</body>
+</html>
