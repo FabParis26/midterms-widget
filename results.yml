@@ -1,7 +1,6 @@
 name: Actualisation des Résultats en direct
 
 on:
-  # On le laisse en déclenchement manuel pour l'instant
   workflow_dispatch:
   # Le jour de l'élection, on décommentera la ligne ci-dessous pour lancer toutes les 5 mins :
   # schedule:
@@ -21,13 +20,14 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Exécution du script des résultats
+      - name: Exécution des scripts de résultats
         run: |
           python scraper_results.py
+          python scraper_results_house.py
 
       - name: Commit et push
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add results_senate.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update live results" && git pull --rebase origin main && git push)
+          git add results_senate.json results_house.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update live results (Senate + House)" && git pull --rebase origin main && git push)
