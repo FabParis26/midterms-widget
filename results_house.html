@@ -182,7 +182,6 @@
     document.getElementById('rep-total').textContent = rep;
     document.getElementById('uncalled-total').textContent = uncalled;
 
-    // Calcul des pourcentages sur 435 sièges
     const pctDem = (dem / 435) * 100;
     const pctRep = (rep / 435) * 100;
     const pctUncalled = Math.max(0, 100 - pctDem - pctRep);
@@ -191,13 +190,11 @@
     document.getElementById('bar-uncalled').style.width = pctUncalled + '%';
     document.getElementById('bar-rep').style.width = pctRep + '%';
 
-    // Gains nets
     const demNet = data.dem_gain || 0;
     const repNet = data.rep_gain || 0;
     document.getElementById('dem-net').textContent = (demNet >= 0 ? '+' : '') + demNet + ' siège' + (Math.abs(demNet) > 1 ? 's' : '');
     document.getElementById('rep-net').textContent = (repNet >= 0 ? '+' : '') + repNet + ' siège' + (Math.abs(repNet) > 1 ? 's' : '');
 
-    // Liste des sièges qui basculent
     const list = document.getElementById('flips-list');
     list.innerHTML = '';
     if (data.flips && data.flips.length > 0) {
@@ -208,7 +205,7 @@
         list.appendChild(li);
       });
     } else {
-      list.innerHTML = '<li class="flip-empty">Aucune bascule de siège déclarée pour l'instant.</li>';
+      list.innerHTML = '<li class="flip-empty">Aucune bascule de siège déclarée pour l\'instant.</li>';
     }
 
     document.getElementById('last-updated').textContent = 'Mis à jour : ' + (data.updated || 'Récemment');
