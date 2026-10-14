@@ -176,28 +176,26 @@
       const graphW = w - padL - padR;
       const graphH = h - padT - padB;
 
-      const demVals = history.map(item => item.dem);
-      const repVals = history.map(item => item.rep);
+      // Utilisation des clés correctes du fichier data.json
+      const demVals = history.map(item => item.democrats);
+      const repVals = history.map(item => item.republicans);
       const allVals = [...demVals, ...repVals];
 
-      // Calcul de l'échelle dynamique
       let minVal = Math.floor(Math.min(...allVals) - 2);
       let maxVal = Math.ceil(Math.max(...allVals) + 2);
       if (maxVal - minVal < 4) { minVal -= 2; maxVal += 2; }
 
-      // CORRECTION DU BOGUE DE LA DIVISION PAR ZÉRO :
-      // Si on n'a qu'un seul point, on le place au milieu du graphique (0.5 * graphW)
+      // Protection mathématique si l'historique n'a qu'un seul jour
       const getX = (i) => history.length === 1 
                           ? padL + (graphW / 2) 
                           : padL + (i / (history.length - 1)) * graphW;
                           
       const getY = (val) => padT + graphH - ((val - minVal) / (maxVal - minVal)) * graphH;
 
-      // Construction des points pour les lignes
-      const demPts = history.map((item, i) => `${getX(i)},${getY(item.dem)}`).join(' ');
-      const repPts = history.map((item, i) => `${getX(i)},${getY(item.rep)}`).join(' ');
+      // Génération des courbes avec les bonnes clés
+      const demPts = history.map((item, i) => `${getX(i)},${getY(item.democrats)}`).join(' ');
+      const repPts = history.map((item, i) => `${getX(i)},${getY(item.republicans)}`).join(' ');
 
-      // Lignes de grille horizontales
       const midVal = Math.round((minVal + maxVal) / 2);
       const ySteps = [minVal, midVal, maxVal];
       let gridSvg = '';
@@ -209,11 +207,10 @@
         `;
       });
 
-      // Repères de dates X
       let datesSvg = '';
       let dateIndices = [];
       if (history.length === 1) {
-          dateIndices = [0]; // S'il n'y a qu'un jour, on n'affiche que lui
+          dateIndices = [0];
       } else {
           dateIndices = [0, Math.floor((history.length - 1) / 2), history.length - 1];
       }
@@ -236,10 +233,10 @@
         `;
       });
 
-      // Points ronds à la fin des courbes
+      // Ronds de fin avec les bonnes clés
       const lastIdx = history.length - 1;
-      const lastDemX = getX(lastIdx), lastDemY = getY(history[lastIdx].dem);
-      const lastRepX = getX(lastIdx), lastRepY = getY(history[lastIdx].rep);
+      const lastDemX = getX(lastIdx), lastDemY = getY(history[lastIdx].democrats);
+      const lastRepX = getX(lastIdx), lastRepY = getY(history[lastIdx].republicans);
 
       const endPointsSvg = `
         <circle cx="${lastDemX}" cy="${lastDemY}" r="3" fill="#2563eb" />
@@ -264,7 +261,7 @@
 
       document.getElementById('pct-dem').textContent = dem;
       document.getElementById('pct-rep').textContent = rep;
-      document.getElementById('margin-value').textContent = `+${margin} pts (${leadingParty})`;
+      document.getElementById('margin-value').textContent = `+${margin.toFixed(1)} pts (${leadingParty})`;
       document.getElementById('last-updated').textContent = `Mis à jour : ${data.last_updated}`;
 
       const total = dem + rep;
@@ -272,7 +269,7 @@
       document.getElementById('bar-rep').style.width = `${(rep / total) * 100}%`;
 
       const badge = document.getElementById('lead-badge');
-      badge.textContent = `${leadingParty} +${margin}`;
+      badge.textContent = `${leadingParty} +${margin.toFixed(1)}`;
       if (leadingParty === 'Républicains') {
         badge.classList.add('rep');
       } else {
@@ -284,7 +281,7 @@
 
     async function loadData() {
       try {
-        const res = await fetch('data.json?v=' + Date.now()); // Ajout anti-cache
+        const res = await fetch('data.json?v=' + Date.now()); 
         if (!res.ok) throw new Error();
         const data = await res.json();
         updateWidget(data);
