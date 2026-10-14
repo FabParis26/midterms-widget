@@ -5,14 +5,14 @@ import urllib.parse
 import os
 from datetime import datetime, timezone
 
-# Les 10 batailles sénatoriales cibles
+# Les 10 batailles sénatoriales cibles de 2026
 TARGET_RACES = {
     "GA": {"name": "Géorgie", "wiki_page": "2026_United_States_Senate_election_in_Georgia", "dem_kw": "Ossoff", "rep_kw": "Greene"},
     "MI": {"name": "Michigan", "wiki_page": "2026_United_States_Senate_election_in_Michigan", "dem_kw": "El-Sayed", "rep_kw": "Rogers"},
     "NH": {"name": "New Hampshire", "wiki_page": "2026_United_States_Senate_election_in_New_Hampshire", "dem_kw": "Pappas", "rep_kw": "Sununu"},
     "ME": {"name": "Maine", "wiki_page": "2026_United_States_Senate_election_in_Maine", "dem_kw": "Jackson", "rep_kw": "Collins"},
     "NC": {"name": "Caroline du Nord", "wiki_page": "2026_United_States_Senate_election_in_North_Carolina", "dem_kw": "Cooper", "rep_kw": "Whatley"},
-    "OH": {"name": "Ohio", "wiki_page": "2026_United_States_Senate_election_in_Ohio", "dem_kw": "Brown", "rep_kw": "Husted"},
+    "OH": {"name": "Ohio", "wiki_page": "2026_United_States_Senate_special_election_in_Ohio", "dem_kw": "Brown", "rep_kw": "Husted"},
     "TX": {"name": "Texas", "wiki_page": "2026_United_States_Senate_election_in_Texas", "dem_kw": "Talarico", "rep_kw": "Paxton"},
     "IA": {"name": "Iowa", "wiki_page": "2026_United_States_Senate_election_in_Iowa", "dem_kw": "Turek", "rep_kw": "Hinson"},
     "AK": {"name": "Alaska", "wiki_page": "2026_United_States_Senate_election_in_Alaska", "dem_kw": "Peltola", "rep_kw": "Sullivan"},
@@ -23,13 +23,13 @@ HEADERS = {'User-Agent': 'MidtermsWidget/1.1 (https://github.com/fabparis26/midt
 FILEPATH = "states_data.json"
 
 def load_previous_data():
-    """Charge le fichier JSON précédent pour servir de secours en cas d'erreur Wikipedia."""
+    """Charge le fichier JSON existant pour servir de secours."""
     if os.path.exists(FILEPATH):
         try:
             with open(FILEPATH, "r", encoding="utf-8") as f:
                 return json.load(f).get("states", {})
         except Exception as e:
-            print(f"⚠️ Impossible de lire l'historique : {e}")
+            print(f"Impossible de lire l'historique : {e}")
     return {}
 
 def fetch_wiki_html(page_title):
@@ -100,28 +100,22 @@ def fetch_live_data():
     states_result = {}
     print("Connexion à l'API Wikipedia...")
     
-    # 1. Chargement des données de la dernière exécution réussie
     previous_data = load_previous_data()
 
     for code, config in TARGET_RACES.items():
         state_html = fetch_wiki_html(config["wiki_page"])
         dem_val, rep_val = parse_wikitable_poll(state_html, config["dem_kw"], config["rep_kw"])
 
-        # 2. Si l'extraction réussit, on prend les nouvelles valeurs
         if dem_val is not None and rep_val is not None:
-            print(f"✅ [{code}] Extrait via Wikipedia : DEM {dem_val}% / REP {rep_val}%")
-            
-        # 3. Si l'extraction échoue (page cassée, pas de sondages), on reprend les anciennes données du JSON
+            print(f"[{code}] Extrait via Wikipedia : DEM {dem_val}% / REP {rep_val}%")
         elif code in previous_data:
             dem_val = previous_data[code]["dem"]
             rep_val = previous_data[code]["rep"]
-            print(f"⚠️ [{code}] Échec Wikipedia -> Restauration des données précédentes : DEM {dem_val}% / REP {rep_val}%")
-            
-        # 4. Garde-fou ultime (si c'est la toute première exécution et que la page est cassée)
+            print(f"[{code}] Échec Wikipedia -> Restauration des données précédentes : DEM {dem_val}% / REP {rep_val}%")
         else:
             dem_val = 50.0
             rep_val = 50.0
-            print(f"❌ [{code}] Aucune donnée disponible, égalité parfaite appliquée par défaut.")
+            print(f"[{code}] Aucune donnée disponible, égalité appliquée par défaut.")
 
         margin = round(dem_val - rep_val, 1)
         states_result[code] = {
@@ -141,7 +135,7 @@ def fetch_live_data():
     with open(FILEPATH, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print(f"🚀 Fichier {FILEPATH} mis à jour avec la protection d'historique !")
+    print(f"Fichier {FILEPATH} mis à jour avec succès.")
 
 if __name__ == "__main__":
     fetch_live_data()
