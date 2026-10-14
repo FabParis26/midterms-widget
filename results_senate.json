@@ -1,42 +1,147 @@
 {
-  "updated": "En attente des résultats",
+  "updated": "2026-10-14 14:15 UTC",
   "baseline_dem": 32,
   "baseline_rep": 33,
   "results": {
-    "AL": { "status": "tossup", "note": "En attente" },
-    "AK": { "status": "tossup", "note": "En attente" },
-    "AR": { "status": "tossup", "note": "En attente" },
-    "CO": { "status": "tossup", "note": "En attente" },
-    "DE": { "status": "tossup", "note": "En attente" },
-    "FL": { "status": "tossup", "note": "En attente" },
-    "GA": { "status": "tossup", "note": "En attente" },
-    "ID": { "status": "tossup", "note": "En attente" },
-    "IL": { "status": "tossup", "note": "En attente" },
-    "IA": { "status": "tossup", "note": "En attente" },
-    "KS": { "status": "tossup", "note": "En attente" },
-    "KY": { "status": "tossup", "note": "En attente" },
-    "LA": { "status": "tossup", "note": "En attente" },
-    "ME": { "status": "tossup", "note": "En attente" },
-    "MA": { "status": "tossup", "note": "En attente" },
-    "MI": { "status": "tossup", "note": "En attente" },
-    "MN": { "status": "tossup", "note": "En attente" },
-    "MS": { "status": "tossup", "note": "En attente" },
-    "MT": { "status": "tossup", "note": "En attente" },
-    "NE": { "status": "tossup", "note": "En attente" },
-    "NH": { "status": "tossup", "note": "En attente" },
-    "NJ": { "status": "tossup", "note": "En attente" },
-    "NM": { "status": "tossup", "note": "En attente" },
-    "NC": { "status": "tossup", "note": "En attente" },
-    "OH": { "status": "tossup", "note": "En attente" },
-    "OK": { "status": "tossup", "note": "En attente" },
-    "OR": { "status": "tossup", "note": "En attente" },
-    "RI": { "status": "tossup", "note": "En attente" },
-    "SC": { "status": "tossup", "note": "En attente" },
-    "SD": { "status": "tossup", "note": "En attente" },
-    "TN": { "status": "tossup", "note": "En attente" },
-    "TX": { "status": "tossup", "note": "En attente" },
-    "VA": { "status": "tossup", "note": "En attente" },
-    "WV": { "status": "tossup", "note": "En attente" },
-    "WY": { "status": "tossup", "note": "En attente" }
+    "AL": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "AK": {
+      "status": "tossup",
+      "note": "Scrutin très serré"
+    },
+    "AR": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "CO": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "DE": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "FL": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "GA": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "ID": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "IL": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "IA": {
+      "status": "tossup",
+      "note": "Scrutin très serré"
+    },
+    "KS": {
+      "status": "tossup",
+      "note": "Scrutin très serré"
+    },
+    "KY": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "LA": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "ME": {
+      "status": "tossup",
+      "note": "Scrutin très serré"
+    },
+    "MA": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "MI": {
+      "status": "tossup",
+      "note": "Scrutin très serré"
+    },
+    "MN": {
+      "status": "tossup",
+      "note": "Scrutin très serré"
+    },
+    "MS": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "MT": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "NE": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "NH": {
+      "status": "tossup",
+      "note": "Scrutin très serré"
+    },
+    "NJ": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "NM": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "NC": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "OH": {
+      "status": "tossup",
+      "note": "Scrutin très serré"
+    },
+    "OK": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "OR": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "RI": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "SC": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "SD": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "TN": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "TX": {
+      "status": "tossup",
+      "note": "Scrutin très serré"
+    },
+    "VA": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    },
+    "WV": {
+      "status": "tossup",
+      "note": "En attente"
+    },
+    "WY": {
+      "status": "tossup",
+      "note": "En attente des résultats"
+    }
   }
 }
