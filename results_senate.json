@@ -1,0 +1,17 @@
+{
+  "updated": "En attente des résultats",
+  "baseline_dem": 32,
+  "baseline_rep": 33,
+  "results": {
+    "GA": { "status": "tossup", "note": "En attente" },
+    "MI": { "status": "tossup", "note": "En attente" },
+    "NH": { "status": "tossup", "note": "En attente" },
+    "ME": { "status": "tossup", "note": "En attente" },
+    "NC": { "status": "tossup", "note": "En attente" },
+    "OH": { "status": "tossup", "note": "En attente" },
+    "TX": { "status": "tossup", "note": "En attente" },
+    "IA": { "status": "tossup", "note": "En attente" },
+    "AK": { "status": "tossup", "note": "En attente" },
+    "KS": { "status": "tossup", "note": "En attente" }
+  }
+}
