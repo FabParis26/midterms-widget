@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-15 12:37 UTC",
+  "last_updated": "2026-10-15 18:32 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -53,9 +53,9 @@
     },
     "IA": {
       "name": "Iowa",
-      "dem": 47.0,
-      "rep": 46.0,
-      "margin": 1.0,
+      "dem": 47.2,
+      "rep": 45.8,
+      "margin": 1.4,
       "leading": "DEM"
     },
     "AK": {
