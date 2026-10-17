@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-16 18:30 UTC",
+  "last_updated": "2026-10-17 00:36 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "democrats": 50.5,
   "republicans": 42.5,
@@ -128,6 +128,11 @@
     },
     {
       "date": "2026-10-16",
+      "democrats": 50.5,
+      "republicans": 42.5
+    },
+    {
+      "date": "2026-10-17",
       "democrats": 50.5,
       "republicans": 42.5
     }
