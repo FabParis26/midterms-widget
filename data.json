@@ -1,9 +1,9 @@
 {
-  "last_updated": "2026-10-18 18:26 UTC",
+  "last_updated": "2026-10-19 00:37 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
-  "democrats": 50.7,
-  "republicans": 42.7,
-  "margin": 8.0,
+  "democrats": 51.0,
+  "republicans": 42.9,
+  "margin": 8.1,
   "leading_party": "Démocrates",
   "history": [
     {
@@ -140,6 +140,11 @@
       "date": "2026-10-18",
       "democrats": 50.7,
       "republicans": 42.7
+    },
+    {
+      "date": "2026-10-19",
+      "democrats": 51.0,
+      "republicans": 42.9
     }
   ]
 }

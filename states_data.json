@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-18 18:26 UTC",
+  "last_updated": "2026-10-19 00:37 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -39,9 +39,9 @@
     },
     "OH": {
       "name": "Ohio",
-      "dem": 47.3,
-      "rep": 43.9,
-      "margin": 3.4,
+      "dem": 47.9,
+      "rep": 45.1,
+      "margin": 2.8,
       "leading": "DEM"
     },
     "TX": {
@@ -53,9 +53,9 @@
     },
     "IA": {
       "name": "Iowa",
-      "dem": 47.2,
-      "rep": 45.8,
-      "margin": 1.4,
+      "dem": 47.0,
+      "rep": 45.9,
+      "margin": 1.1,
       "leading": "DEM"
     },
     "AK": {
