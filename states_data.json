@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-21 12:36 UTC",
+  "last_updated": "2026-10-21 18:32 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -11,8 +11,8 @@
     },
     "MI": {
       "name": "Michigan",
-      "dem": 47.9,
-      "rep": 45.0,
+      "dem": 48.0,
+      "rep": 45.1,
       "margin": 2.9,
       "leading": "DEM"
     },
@@ -32,9 +32,9 @@
     },
     "NC": {
       "name": "Caroline du Nord",
-      "dem": 50.9,
-      "rep": 40.8,
-      "margin": 10.1,
+      "dem": 52.4,
+      "rep": 41.0,
+      "margin": 11.4,
       "leading": "DEM"
     },
     "OH": {
