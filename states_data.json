@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-22 00:37 UTC",
+  "last_updated": "2026-10-22 06:37 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -67,9 +67,9 @@
     },
     "KS": {
       "name": "Kansas",
-      "dem": 46.4,
-      "rep": 45.5,
-      "margin": 0.9,
+      "dem": 46.3,
+      "rep": 45.2,
+      "margin": 1.1,
       "leading": "DEM"
     }
   }
