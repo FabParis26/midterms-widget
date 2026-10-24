@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-24 12:30 UTC",
+  "last_updated": "2026-10-24 18:26 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -18,9 +18,9 @@
     },
     "NH": {
       "name": "New Hampshire",
-      "dem": 49.7,
+      "dem": 50.3,
       "rep": 43.2,
-      "margin": 6.5,
+      "margin": 7.1,
       "leading": "DEM"
     },
     "ME": {
@@ -32,9 +32,9 @@
     },
     "NC": {
       "name": "Caroline du Nord",
-      "dem": 52.4,
-      "rep": 41.0,
-      "margin": 11.4,
+      "dem": 52.0,
+      "rep": 40.7,
+      "margin": 11.3,
       "leading": "DEM"
     },
     "OH": {
