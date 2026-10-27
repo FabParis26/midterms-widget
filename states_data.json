@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-27 12:40 UTC",
+  "last_updated": "2026-10-27 18:40 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -25,9 +25,9 @@
     },
     "ME": {
       "name": "Maine",
-      "dem": 48.9,
-      "rep": 47.4,
-      "margin": 1.5,
+      "dem": 49.2,
+      "rep": 47.0,
+      "margin": 2.2,
       "leading": "DEM"
     },
     "NC": {
