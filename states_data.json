@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-28 00:46 UTC",
+  "last_updated": "2026-10-28 06:46 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -32,9 +32,9 @@
     },
     "NC": {
       "name": "Caroline du Nord",
-      "dem": 52.0,
-      "rep": 40.7,
-      "margin": 11.3,
+      "dem": 51.9,
+      "rep": 41.7,
+      "margin": 10.2,
       "leading": "DEM"
     },
     "OH": {
