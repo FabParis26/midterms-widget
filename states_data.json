@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-28 12:46 UTC",
+  "last_updated": "2026-10-28 18:43 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -11,9 +11,9 @@
     },
     "MI": {
       "name": "Michigan",
-      "dem": 48.0,
-      "rep": 45.1,
-      "margin": 2.9,
+      "dem": 48.5,
+      "rep": 45.2,
+      "margin": 3.3,
       "leading": "DEM"
     },
     "NH": {
@@ -25,9 +25,9 @@
     },
     "ME": {
       "name": "Maine",
-      "dem": 49.2,
-      "rep": 47.0,
-      "margin": 2.2,
+      "dem": 49.5,
+      "rep": 46.7,
+      "margin": 2.8,
       "leading": "DEM"
     },
     "NC": {
@@ -39,9 +39,9 @@
     },
     "OH": {
       "name": "Ohio",
-      "dem": 48.2,
+      "dem": 48.1,
       "rep": 44.7,
-      "margin": 3.5,
+      "margin": 3.4,
       "leading": "DEM"
     },
     "TX": {
