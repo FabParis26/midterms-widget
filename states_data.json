@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-29 06:48 UTC",
+  "last_updated": "2026-10-29 12:47 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -46,9 +46,9 @@
     },
     "TX": {
       "name": "Texas",
-      "dem": 48.9,
-      "rep": 45.9,
-      "margin": 3.0,
+      "dem": 49.1,
+      "rep": 45.7,
+      "margin": 3.4,
       "leading": "DEM"
     },
     "IA": {
@@ -68,8 +68,8 @@
     "KS": {
       "name": "Kansas",
       "dem": 46.0,
-      "rep": 45.5,
-      "margin": 0.5,
+      "rep": 45.6,
+      "margin": 0.4,
       "leading": "DEM"
     }
   }
