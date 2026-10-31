@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-31 00:52 UTC",
+  "last_updated": "2026-10-31 06:45 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -11,9 +11,9 @@
     },
     "MI": {
       "name": "Michigan",
-      "dem": 49.1,
-      "rep": 44.5,
-      "margin": 4.6,
+      "dem": 49.3,
+      "rep": 44.2,
+      "margin": 5.1,
       "leading": "DEM"
     },
     "NH": {
