@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-11-01 12:43 UTC",
+  "last_updated": "2026-11-01 18:38 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -39,9 +39,9 @@
     },
     "OH": {
       "name": "Ohio",
-      "dem": 48.2,
-      "rep": 45.8,
-      "margin": 2.4,
+      "dem": 48.3,
+      "rep": 46.0,
+      "margin": 2.3,
       "leading": "DEM"
     },
     "TX": {
