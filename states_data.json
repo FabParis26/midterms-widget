@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-11-02 00:55 UTC",
+  "last_updated": "2026-11-02 07:16 UTC",
   "source": "Instituts de sondages (via Wikipedia)",
   "states": {
     "GA": {
@@ -25,9 +25,9 @@
     },
     "ME": {
       "name": "Maine",
-      "dem": 50.1,
-      "rep": 46.1,
-      "margin": 4.0,
+      "dem": 50.3,
+      "rep": 45.7,
+      "margin": 4.6,
       "leading": "DEM"
     },
     "NC": {
@@ -39,16 +39,16 @@
     },
     "OH": {
       "name": "Ohio",
-      "dem": 48.6,
-      "rep": 46.5,
-      "margin": 2.1,
+      "dem": 48.2,
+      "rep": 45.8,
+      "margin": 2.4,
       "leading": "DEM"
     },
     "TX": {
       "name": "Texas",
       "dem": 49.4,
-      "rep": 46.0,
-      "margin": 3.4,
+      "rep": 45.6,
+      "margin": 3.8,
       "leading": "DEM"
     },
     "IA": {
