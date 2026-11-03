@@ -2,6 +2,7 @@ import json
 import re
 import urllib.request
 import urllib.parse
+import os
 from datetime import datetime, timezone
 
 # Les 35 scrutins sénatoriaux en jeu en 2026 (33 Classe 2 + 2 spéciales)
@@ -44,6 +45,20 @@ ALL_SENATE_RACES_2026 = {
 }
 
 HEADERS = {'User-Agent': 'MidtermsWidget/1.0 (https://github.com/fabparis26/midterms-widget)'}
+FILEPATH = "results_senate.json"
+
+# Textes génériques par défaut (à ne pas considérer comme des notes manuelles)
+GENERIC_NOTES = {"en attente", "en attente des résultats", "scrutin très serré", ""}
+
+def load_previous():
+    """Charge le fichier JSON existant pour préserver les interventions manuelles."""
+    if os.path.exists(FILEPATH):
+        try:
+            with open(FILEPATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Notice: impossible de charger {FILEPATH} ({e})")
+    return None
 
 def fetch_wiki_html(page_title):
     api_url = f"https://en.wikipedia.org/w/api.php?action=parse&page={urllib.parse.quote(page_title)}&format=json&prop=text"
@@ -95,9 +110,11 @@ def parse_results(html_content):
             if "democratic hold" in row_text or "democratic gain" in row_text or "democrat hold" in row_text:
                 status = "called_dem"
                 winner = "Démocrate déclaré"
+                note = "Victoire Démocrate (Wikipédia)"
             elif "republican hold" in row_text or "republican gain" in row_text:
                 status = "called_rep"
                 winner = "Républicain déclaré"
+                note = "Victoire Républicaine (Wikipédia)"
             elif "too close to call" in row_text or "tossup" in row_text:
                 status = "tossup"
                 note = "Scrutin très serré"
@@ -113,14 +130,39 @@ def main():
     html = fetch_wiki_html("2026_United_States_Senate_elections")
     parsed_results = parse_results(html)
     
+    # 1. Récupération des données précédentes existantes
+    prev_json = load_previous() or {}
+    prev_results = prev_json.get("results", {})
+    
     output_results = {}
     for code in ALL_SENATE_RACES_2026.keys():
-        if code in parsed_results:
-            output_results[code] = parsed_results[code]
-        else:
-            output_results[code] = {"status": "tossup", "note": "En attente"}
+        prev_state = prev_results.get(code, {})
+        wiki_state = parsed_results.get(code, None)
 
-    # 65 sièges ne sont pas remis en jeu (32 Démocrates/Indépendants alliés, 33 Républicains)
+        # Règle 1 : Si Wikipédia a déclaré un vainqueur officiel
+        if wiki_state and wiki_state.get("status") in ["called_dem", "called_rep", "dem", "rep"]:
+            output_results[code] = wiki_state
+
+        # Règle 2 : Si tu as validé manuellement un vainqueur dans le JSON (priorité maintenue)
+        elif prev_state.get("status") in ["called_dem", "called_rep", "dem", "rep"]:
+            output_results[code] = prev_state
+
+        # Règle 3 : Le scrutin est toujours indécis (tossup)
+        else:
+            status = "tossup"
+            prev_note = prev_state.get("note", "").strip()
+
+            # Si tu as écrit une note personnalisée sur ce duel (ex: "Dépouillé à 85%..."), ON LA GARDE
+            if prev_note and prev_note.lower() not in GENERIC_NOTES:
+                note = prev_note
+            elif wiki_state:
+                note = wiki_state.get("note", "En attente des résultats")
+            else:
+                note = prev_state.get("note", "En attente des résultats")
+
+            output_results[code] = {"status": status, "note": note}
+
+    # 65 sièges hors scrutin (34 Démocrates/Indépendants alliés, 31 Républicains)
     output = {
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "baseline_dem": 34,
@@ -128,10 +170,10 @@ def main():
         "results": output_results
     }
 
-    with open("results_senate.json", "w", encoding="utf-8") as f:
+    with open(FILEPATH, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print("Fichier results_senate.json mis à jour (35 États gérés) !")
+    print(f"Fichier {FILEPATH} mis à jour (35 États gérés sans écraser le manuel) !")
 
 if __name__ == "__main__":
     main()
