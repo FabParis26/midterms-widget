@@ -34,11 +34,15 @@ def parse_house_results(html):
     rep_seats = None
     flips = []
 
-    # 1. Ciblage strict de la ligne des résultats validés ("Seats won" ou "Seats after")
-    # Cela ignore formellement "Seats before" (qui contient 215 / 215)
+    # 1. On isole EXCLUSIVEMENT la boîte de l'infobox principale
+    # Tous les autres tableaux de l'article (fédéraux, comtés, etc.) sont ignorés
+    infobox_match = re.search(r'<table[^>]*class="[^"]*infobox[^"]*"[^>]*>(.*?)</table>', html, re.DOTALL | re.IGNORECASE)
+    infobox_html = infobox_match.group(1) if infobox_match else html
+
+    # 2. Ciblage strict de "Seats won" ou "Seats after" (espace normale ou &nbsp;)
     row_match = re.search(
-        r'<tr[^>]*>\s*<th[^>]*>[^<]*Seats\s+(?:won|after)[^<]*</th>(.*?)(?:</tr>|$)',
-        html,
+        r'<tr[^>]*>\s*<th[^>]*>[^<]*Seats(?:&nbsp;|\s|&#160;)+(?:won|after)[^<]*</th>(.*?)(?:</tr>|$)',
+        infobox_html,
         re.DOTALL | re.IGNORECASE
     )
 
@@ -51,9 +55,9 @@ def parse_house_results(html):
             val1 = int(cells[0])
             val2 = int(cells[1])
 
-            # Détection de l'ordre des colonnes dans l'infobox (GOP en col 1 car majorité sortante)
+            # Ordre des partis dans l'infobox (GOP en tête car parti majoritaire sortant)
             rep_first = True
-            party_row = re.search(r'<tr[^>]*>\s*<th[^>]*>[^<]*Party[^<]*</th>(.*?)(?:</tr>|$)', html, re.DOTALL | re.IGNORECASE)
+            party_row = re.search(r'<tr[^>]*>\s*<th[^>]*>[^<]*Party[^<]*</th>(.*?)(?:</tr>|$)', infobox_html, re.DOTALL | re.IGNORECASE)
             if party_row:
                 p_cells = re.findall(r'<td[^>]*>(.*?)</td>', party_row.group(1), re.DOTALL | re.IGNORECASE)
                 if len(p_cells) >= 2:
@@ -69,7 +73,7 @@ def parse_house_results(html):
                 dem_seats = dem
                 rep_seats = rep
 
-    # 2. Extraction des bascules de circonscriptions (Flips)
+    # 3. Extraction des bascules (Flips) sur l'ensemble de la page
     flip_matches = re.findall(r'([A-Z]{2}-\d{1,2}|[A-Za-z\s]+(?:\s+at-large|\s+\d{1,2}))\s*</td>.*?((?:Democratic|Republican)\s+gain)', html, re.DOTALL | re.IGNORECASE)
     for dist, kind in flip_matches[:10]:
         clean_dist = re.sub(r'<[^>]+>', '', dist).strip()
