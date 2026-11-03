@@ -123,8 +123,8 @@ def main():
     # 65 sièges ne sont pas remis en jeu (32 Démocrates/Indépendants alliés, 33 Républicains)
     output = {
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        "baseline_dem": 32,
-        "baseline_rep": 33,
+        "baseline_dem": 34,
+        "baseline_rep": 31,
         "results": output_results
     }
 
