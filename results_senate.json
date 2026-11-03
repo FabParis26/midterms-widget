@@ -1,7 +1,7 @@
 {
-  "updated": "2026-10-14 14:41 UTC",
-  "baseline_dem": 34,
-  "baseline_rep": 31,
+  "updated": "2026-11-03 15:27 UTC",
+  "baseline_dem": 32,
+  "baseline_rep": 33,
   "results": {
     "AL": {
       "status": "tossup",
@@ -69,7 +69,7 @@
     },
     "MN": {
       "status": "tossup",
-      "note": "Scrutin très serré"
+      "note": "En attente des résultats"
     },
     "MS": {
       "status": "tossup",
@@ -81,11 +81,11 @@
     },
     "NE": {
       "status": "tossup",
-      "note": "En attente des résultats"
+      "note": "Scrutin très serré"
     },
     "NH": {
       "status": "tossup",
-      "note": "Scrutin très serré"
+      "note": "En attente des résultats"
     },
     "NJ": {
       "status": "tossup",
@@ -117,7 +117,7 @@
     },
     "SC": {
       "status": "tossup",
-      "note": "En attente des résultats"
+      "note": "Scrutin très serré"
     },
     "SD": {
       "status": "tossup",
