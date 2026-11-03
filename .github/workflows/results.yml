@@ -2,9 +2,9 @@ name: Actualisation des Résultats en direct
 
 on:
   workflow_dispatch:
-  # Le jour de l'élection, on décommentera la ligne ci-dessous pour lancer toutes les 5 mins :
-  # schedule:
-  #   - cron: '*/5 * * * *'
+  Le jour de l'élection, on décommentera la ligne ci-dessous pour lancer toutes les 5 mins :
+  schedule:
+    - cron: '*/5 * * * *'
 
 jobs:
   scrape-results:
