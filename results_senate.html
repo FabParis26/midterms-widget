@@ -7,7 +7,9 @@
   <style>
     :root {
       --dem-color: #2563eb;
+      --dem-lean-color: #60a5fa; /* Bleu clair / Tendance */
       --rep-color: #dc2626;
+      --rep-lean-color: #f87171; /* Rouge clair / Tendance */
       --tossup-color: #eab308;
       --no-election: #e2e8f0;
       --no-election-text: #94a3b8;
@@ -65,13 +67,15 @@
 
     /* Couleurs de statut */
     .tile.called-dem { background: var(--dem-color); color: #fff; }
+    .tile.lean-dem   { background: var(--dem-lean-color); color: #fff; }
     .tile.called-rep { background: var(--rep-color); color: #fff; }
-    .tile.tossup { background: var(--tossup-color); color: #000; }
+    .tile.lean-rep   { background: var(--rep-lean-color); color: #fff; }
+    .tile.tossup     { background: var(--tossup-color); color: #000; }
     .tile.no-election { background: var(--no-election); color: var(--no-election-text); cursor: default; }
     .tile.no-election:hover { transform: none; box-shadow: none; }
 
     /* Légende */
-    .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; font-size: 0.72rem; color: var(--text-muted); margin-top: 10px; }
+    .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; font-size: 0.72rem; color: var(--text-muted); margin-top: 10px; }
     .legend-item { display: flex; align-items: center; gap: 5px; }
     .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
 
@@ -120,6 +124,8 @@
 
   <div class="legend">
     <div class="legend-item"><div class="legend-swatch" style="background: var(--dem-color);"></div> Démocrate déclaré</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--dem-lean-color);"></div> Démocrate en tête</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--rep-lean-color);"></div> Républicain en tête</div>
     <div class="legend-item"><div class="legend-swatch" style="background: var(--rep-color);"></div> Républicain déclaré</div>
     <div class="legend-item"><div class="legend-swatch" style="background: var(--tossup-color);"></div> Dépouillement / Indécis</div>
     <div class="legend-item"><div class="legend-swatch" style="background: var(--no-election);"></div> Pas d'élection en 2026</div>
@@ -133,14 +139,14 @@
 
 <script>
   const MAP_TILES = [
-    { code: "AK", r: 1, c: 1 },                                                                                          { code: "ME", r: 1, c: 12 },
-    { code: "WI", r: 2, c: 6 },                                                               { code: "VT", r: 2, c: 11 }, { code: "NH", r: 2, c: 12 },
+    { code: "AK", r: 1, c: 1 },                                                                                                                  { code: "ME", r: 1, c: 12 },
+    { code: "WI", r: 2, c: 6 },                                                                              { code: "VT", r: 2, c: 11 }, { code: "NH", r: 2, c: 12 },
     { code: "WA", r: 3, c: 2 }, { code: "ID", r: 3, c: 3 }, { code: "MT", r: 3, c: 4 }, { code: "ND", r: 3, c: 5 }, { code: "MN", r: 3, c: 6 }, { code: "IL", r: 3, c: 7 }, { code: "MI", r: 3, c: 8 }, { code: "NY", r: 3, c: 10 }, { code: "MA", r: 3, c: 11 }, { code: "RI", r: 3, c: 12 },
     { code: "OR", r: 4, c: 2 }, { code: "NV", r: 4, c: 3 }, { code: "WY", r: 4, c: 4 }, { code: "SD", r: 4, c: 5 }, { code: "IA", r: 4, c: 6 }, { code: "IN", r: 4, c: 7 }, { code: "OH", r: 4, c: 8 }, { code: "PA", r: 4, c: 9 }, { code: "NJ", r: 4, c: 10 }, { code: "CT", r: 4, c: 11 },
     { code: "CA", r: 5, c: 2 }, { code: "UT", r: 5, c: 3 }, { code: "CO", r: 5, c: 4 }, { code: "NE", r: 5, c: 5 }, { code: "MO", r: 5, c: 6 }, { code: "KY", r: 5, c: 7 }, { code: "WV", r: 5, c: 8 }, { code: "VA", r: 5, c: 9 }, { code: "MD", r: 5, c: 10 }, { code: "DE", r: 5, c: 11 },
     { code: "AZ", r: 6, c: 3 }, { code: "NM", r: 6, c: 4 }, { code: "KS", r: 6, c: 5 }, { code: "AR", r: 6, c: 6 }, { code: "TN", r: 6, c: 7 }, { code: "NC", r: 6, c: 8 }, { code: "SC", r: 6, c: 9 },
                                 { code: "OK", r: 7, c: 5 }, { code: "LA", r: 7, c: 6 }, { code: "MS", r: 7, c: 7 }, { code: "AL", r: 7, c: 8 }, { code: "GA", r: 7, c: 9 },
-    { code: "HI", r: 8, c: 1 },                             { code: "TX", r: 8, c: 5 },                                                           { code: "FL", r: 8, c: 9 }
+    { code: "HI", r: 8, c: 1 },                             { code: "TX", r: 8, c: 5 },                                                         { code: "FL", r: 8, c: 9 }
   ];
 
   const STATE_NAMES = {
@@ -156,38 +162,37 @@
 
   const NO_ELECTION_2026 = new Set(["AZ", "CA", "CT", "HI", "IN", "MD", "MO", "NV", "NY", "ND", "PA", "UT", "VT", "WA", "WI"]);
 
+  function getLeanStatus(note) {
+    const n = (note || "").toLowerCase();
+    if (n.includes("démocrate en tête") || n.includes("démocrates en tête") || n.includes("avance démocrate")) {
+      return "lean_dem";
+    }
+    if (n.includes("républicain en tête") || n.includes("républicains en tête") || n.includes("avance républicaine")) {
+      return "lean_rep";
+    }
+    return null;
+  }
+
   async function loadData() {
     let data;
     try {
-      // NOTE: Appel au fichier spécifique aux résultats : results_senate.json
       const resp = await fetch("results_senate.json?v=" + Date.now());
       if (!resp.ok) throw new Error("Fichier absent");
       data = await resp.json();
     } catch {
       data = {
-        baseline_dem: 32,
-        baseline_rep: 33,
+        baseline_dem: 34,
+        baseline_rep: 31,
         updated: "En attente du dépouillement",
-        results: {
-            "GA": { "status": "tossup", "note": "En attente des résultats" },
-            "MI": { "status": "tossup", "note": "En attente des résultats" },
-            "NH": { "status": "tossup", "note": "En attente des résultats" },
-            "ME": { "status": "tossup", "note": "En attente des résultats" },
-            "NC": { "status": "tossup", "note": "En attente des résultats" },
-            "OH": { "status": "tossup", "note": "En attente des résultats" },
-            "TX": { "status": "tossup", "note": "En attente des résultats" },
-            "IA": { "status": "tossup", "note": "En attente des résultats" },
-            "AK": { "status": "tossup", "note": "En attente des résultats" },
-            "KS": { "status": "tossup", "note": "En attente des résultats" }
-        }
+        results: {}
       };
     }
     render(data);
   }
 
   function render(data) {
-    let demTotal = data.baseline_dem || 0;
-    let repTotal = data.baseline_rep || 0;
+    let demTotal = data.baseline_dem || 34;
+    let repTotal = data.baseline_rep || 31;
     const grid = document.getElementById("map-grid");
     grid.innerHTML = "";
 
@@ -200,6 +205,7 @@
 
       const info = (data.results && data.results[t.code]) || {};
       const noElec = NO_ELECTION_2026.has(t.code);
+      const lean = getLeanStatus(info.note);
 
       if (noElec) {
         div.classList.add("no-election");
@@ -209,6 +215,10 @@
       } else if (info.status === "called_rep") {
         div.classList.add("called-rep");
         repTotal++;
+      } else if (lean === "lean_dem") {
+        div.classList.add("lean-dem"); // Bleu clair (tendance : pas de point au compteur)
+      } else if (lean === "lean_rep") {
+        div.classList.add("lean-rep"); // Rouge clair (tendance : pas de point au compteur)
       } else {
         div.classList.add("tossup");
       }
@@ -234,10 +244,20 @@
       return;
     }
 
+    const lean = getLeanStatus(info.note);
     let statusText = "En attente des premiers dépouillements";
-    if (info.status === "called_dem") statusText = `<strong style="color:var(--dem-color)">Victoire Démocrate déclarée</strong> (${info.winner || ""})`;
-    else if (info.status === "called_rep") statusText = `<strong style="color:var(--rep-color)">Victoire Républicaine déclarée</strong> (${info.winner || ""})`;
-    else if (info.status === "tossup") statusText = `<strong style="color:var(--tossup-color)">Indécis</strong> — ${info.note || "En cours de décompte"}`;
+
+    if (info.status === "called_dem") {
+      statusText = `<strong style="color:var(--dem-color)">Victoire Démocrate déclarée</strong> (${info.winner || ""})`;
+    } else if (info.status === "called_rep") {
+      statusText = `<strong style="color:var(--rep-color)">Victoire Républicaine déclarée</strong> (${info.winner || ""})`;
+    } else if (lean === "lean_dem") {
+      statusText = `<strong style="color:var(--dem-lean-color)">Démocrates en tête</strong> — ${info.note}`;
+    } else if (lean === "lean_rep") {
+      statusText = `<strong style="color:var(--rep-lean-color)">Républicains en tête</strong> — ${info.note}`;
+    } else if (info.status === "tossup") {
+      statusText = `<strong style="color:var(--tossup-color)">Indécis</strong> — ${info.note || "En cours de décompte"}`;
+    }
 
     box.innerHTML = `<div><strong>${name} (${code})</strong> : ${statusText}</div>`;
   }
