@@ -1,9 +1,9 @@
 {
-  "updated": "En attente du dépouillement",
-  "dem_total": 0,
-  "rep_total": 0,
-  "uncalled": 435,
-  "dem_gain": 0,
-  "rep_gain": 0,
+  "updated": "2026-11-03 23:21 UTC",
+  "dem_total": 13,
+  "rep_total": 1,
+  "uncalled": 421,
+  "dem_gain": -200,
+  "rep_gain": -219,
   "flips": []
 }
