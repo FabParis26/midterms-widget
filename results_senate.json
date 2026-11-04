@@ -40,11 +40,11 @@
       "note": "En attente des résultats"
     },
     "IA": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "Scrutin très serré"
     },
     "KS": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "Scrutin très serré"
     },
     "KY": {
@@ -68,7 +68,7 @@
       "note": "Scrutin très serré"
     },
     "MN": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "En attente des résultats"
     },
     "MS": {
@@ -100,7 +100,7 @@
       "note": "En attente des résultats"
     },
     "OH": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "Scrutin très serré"
     },
     "OK": {
@@ -108,7 +108,7 @@
       "note": "En attente des résultats"
     },
     "OR": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "En attente des résultats"
     },
     "RI": {
@@ -128,7 +128,7 @@
       "note": "En attente des résultats"
     },
     "TX": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "Scrutin très serré"
     },
     "VA": {
