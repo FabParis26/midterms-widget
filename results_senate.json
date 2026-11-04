@@ -132,8 +132,9 @@
       "note": "Scrutin très serré"
     },
     "VA": {
-      "status": "tossup",
-      "note": "En attente des résultats"
+      "status": "called_dem",
+      "note": "Réélection déclarée par l'AP",
+      "winner": "Mark Warner"
     },
     "WV": {
       "status": "tossup",
