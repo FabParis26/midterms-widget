@@ -20,7 +20,7 @@
       "note": "En attente des résultats"
     },
     "DE": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "En attente des résultats"
     },
     "FL": {
@@ -28,7 +28,7 @@
       "note": "En attente des résultats"
     },
     "GA": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "En attente des résultats"
     },
     "ID": {
@@ -36,7 +36,7 @@
       "note": "En attente des résultats"
     },
     "IL": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "En attente des résultats"
     },
     "IA": {
@@ -60,7 +60,7 @@
       "note": "Scrutin très serré"
     },
     "MA": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "En attente des résultats"
     },
     "MI": {
@@ -88,7 +88,7 @@
       "note": "En attente des résultats"
     },
     "NJ": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "En attente des résultats"
     },
     "NM": {
@@ -112,7 +112,7 @@
       "note": "En attente des résultats"
     },
     "RI": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "En attente des résultats"
     },
     "SC": {
