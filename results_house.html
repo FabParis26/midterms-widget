@@ -74,26 +74,10 @@
       white-space: nowrap;
     }
 
-    /* Statistiques et bascules */
-    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+    /* Statistiques */
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
     .stat-card { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; font-size: 0.8rem; }
     .stat-card strong { display: block; font-size: 0.95rem; margin-top: 2px; }
-
-    /* Liste des bascules (Flips) */
-    .flips-header { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
-    .flips-list { list-style: none; display: flex; flex-direction: column; gap: 6px; min-height: 48px; }
-    .flip-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      border: 1px solid var(--border-color);
-    }
-    .flip-item.to-dem { background: var(--dem-light); border-color: #bfdbfe; color: var(--dem-color); font-weight: 600; }
-    .flip-item.to-rep { background: var(--rep-light); border-color: #fecaca; color: var(--rep-color); font-weight: 600; }
-    .flip-empty { font-size: 0.8rem; color: var(--text-muted); font-style: italic; text-align: center; padding: 12px 0; }
 
     .footer { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); }
   </style>
@@ -142,13 +126,8 @@
     </div>
   </div>
 
-  <div class="flips-header">Sièges ayant basculé (Flips)</div>
-  <ul class="flips-list" id="flips-list">
-    <li class="flip-empty">Aucune bascule de siège déclarée pour l'instant.</li>
-  </ul>
-
   <div class="footer">
-    <span>Source : Associated Press / API Wikipedia</span>
+    <span>Source : Associated Press</span>
     <span id="last-updated">Mis à jour : en attente</span>
   </div>
 </div>
@@ -167,8 +146,7 @@
         rep_total: 0,
         uncalled: 435,
         dem_gain: 0,
-        rep_gain: 0,
-        flips: []
+        rep_gain: 0
       });
     }
   }
@@ -194,19 +172,6 @@
     const repNet = data.rep_gain || 0;
     document.getElementById('dem-net').textContent = (demNet >= 0 ? '+' : '') + demNet + ' siège' + (Math.abs(demNet) > 1 ? 's' : '');
     document.getElementById('rep-net').textContent = (repNet >= 0 ? '+' : '') + repNet + ' siège' + (Math.abs(repNet) > 1 ? 's' : '');
-
-    const list = document.getElementById('flips-list');
-    list.innerHTML = '';
-    if (data.flips && data.flips.length > 0) {
-      data.flips.slice(0, 6).forEach(f => {
-        const li = document.createElement('li');
-        li.className = 'flip-item ' + (f.to === 'DEM' ? 'to-dem' : 'to-rep');
-        li.innerHTML = `<span><strong>${f.district}</strong> (${f.state})</span><span>${f.from} ➔ ${f.to}</span>`;
-        list.appendChild(li);
-      });
-    } else {
-      list.innerHTML = '<li class="flip-empty">Aucune bascule de siège déclarée pour l\'instant.</li>';
-    }
 
     document.getElementById('last-updated').textContent = 'Mis à jour : ' + (data.updated || 'Récemment');
   }
