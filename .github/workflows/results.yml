@@ -22,7 +22,7 @@ jobs:
       - name: Exécution des scripts de résultats
         run: |
           python scraper_results.py
-          # python scraper_results_house.py
+          python scraper_results_house.py
 
       - name: Commit et push
         run: |
