@@ -16,7 +16,7 @@
       "note": "En attente des résultats"
     },
     "CO": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "En attente des résultats"
     },
     "DE": {
@@ -92,7 +92,7 @@
       "note": "En attente des résultats"
     },
     "NM": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "En attente des résultats"
     },
     "NC": {
@@ -141,7 +141,7 @@
       "note": "En attente"
     },
     "WY": {
-      "status": "tossup",
+      "status": "called_rep",
       "note": "En attente des résultats"
     }
   }
