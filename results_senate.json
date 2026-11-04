@@ -4,7 +4,7 @@
   "baseline_rep": 31,
   "results": {
     "AL": {
-      "status": "tossup",
+      "status": "called_rep",
       "note": "En attente des résultats"
     },
     "AK": {
@@ -80,7 +80,7 @@
       "note": "En attente des résultats"
     },
     "NE": {
-      "status": "called_dem",
+      "status": "tossup",
       "note": "Scrutin très serré"
     },
     "NH": {
