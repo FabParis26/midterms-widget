@@ -96,7 +96,7 @@
       "note": "En attente des résultats"
     },
     "NC": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "En attente des résultats"
     },
     "OH": {
@@ -137,7 +137,7 @@
       "winner": "Mark Warner"
     },
     "WV": {
-      "status": "tossup",
+      "status": "called_rep",
       "note": "En attente"
     },
     "WY": {
