@@ -32,7 +32,7 @@
       "note": "En attente des résultats"
     },
     "ID": {
-      "status": "tossup",
+      "status": "called_rep",
       "note": "En attente des résultats"
     },
     "IL": {
@@ -56,7 +56,7 @@
       "note": "En attente des résultats"
     },
     "ME": {
-      "status": "tossup",
+      "status": "called_dem",
       "note": "Scrutin très serré"
     },
     "MA": {
