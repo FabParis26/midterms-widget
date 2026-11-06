@@ -1,9 +1,9 @@
 {
-  "updated": "2026-11-06 00:07 UTC",
+  "updated": "2026-11-06 01:10 UTC",
   "dem_total": 253,
-  "rep_total": 155,
-  "uncalled": 27,
+  "rep_total": 156,
+  "uncalled": 26,
   "dem_gain": 40,
-  "rep_gain": -65,
+  "rep_gain": -64,
   "flips": []
 }
