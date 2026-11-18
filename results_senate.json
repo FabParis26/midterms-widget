@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-18 02:57 UTC",
+  "updated": "2026-11-18 11:24 UTC",
   "baseline_dem": 34,
   "baseline_rep": 31,
   "results": {
@@ -9,8 +9,9 @@
       "winner": "Républicain déclaré"
     },
     "AK": {
-      "status": "tossup",
-      "note": "Scrutin très serré"
+      "status": "called_dem",
+      "note": "Victoire Démocrate (Wikipédia)",
+      "winner": "Démocrate déclaré"
     },
     "AR": {
       "status": "called_rep",
